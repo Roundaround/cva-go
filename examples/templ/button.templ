@@ -1,0 +1,45 @@
+package button
+
+import (
+	twmerge "github.com/Oudwins/tailwind-merge-go"
+	"github.com/Roundaround/cva-go"
+)
+
+type Size int
+
+const (
+	Small Size = iota
+	Medium
+	Large
+)
+
+const DefaultSize = Medium
+
+type ButtonProps struct {
+	classes []string // Classes applied after the built-in ones
+	size    Size     // The variant we want to bind with cva-go
+}
+
+var button = cva.NewCva(
+	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors",
+	cva.WithVariant(
+		func(p ButtonProps) Size { return p.size },
+		map[Size]string{
+			Small:  "h-9 px-3",
+			Medium: "h-10 px-4 py-2",
+			Large:  "h-11 px-8",
+		},
+	),
+	cva.WithClassJoiner[ButtonProps](func(parts []string) string {
+		return twmerge.Merge(parts...)
+	}),
+	cva.WithClasses(func(p ButtonProps) []string {
+		return p.classes
+	}),
+)
+
+templ Button(p ButtonProps) {
+	<button class={ button.ClassName(p) }>
+		{ children... }
+	</button>
+}

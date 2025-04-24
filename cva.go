@@ -4,14 +4,12 @@ import (
 	"strings"
 )
 
-func Classes(s ...string) []string {
-	return s
-}
-
 var defaultClassJoiner = func(parts []string) string {
 	return strings.Join(parts, " ")
 }
 
+// The default class joiner is `strings.Join(parts, " ")`. Replace this value
+// with your own function to customize the default class joining behavior.
 var FallbackClassJoiner = defaultClassJoiner
 
 type classProducer[P any] interface {
@@ -67,34 +65,47 @@ func (v predicateVariant[P]) apply(p P) []string {
 	return nil
 }
 
-type identityApplicator[P any] struct {
+type staticClassList[P any] struct {
 	getter func(P) []string
 }
 
-func (v identityApplicator[P]) apply(p P) []string {
+func (v staticClassList[P]) apply(p P) []string {
 	return v.getter(p)
 }
 
+// Create a new `Cva` value.
+//
+// The `base` argument is the base class list for the component, which will
+// always be applied, regardless of the component's props.
+//
+// The `opts` argument is a list of options to configure the `Cva`. See
+// `WithVariant`, `WithCompoundVariant`, `WithPredicateVariant`, and
+// `WithClasses` for examples.
 func NewCva[P any, S string | []string](base S, opts ...Option[P]) *Cva[P] {
-	var baseSlice []string
+	var normalized []string
 	if baseString, ok := any(base).(string); ok {
-		baseSlice = []string{baseString}
+		normalized = []string{baseString}
 	} else {
-		baseSlice = any(base).([]string)
+		normalized = any(base).([]string)
 	}
-	c := &Cva[P]{base: baseSlice}
+
+	c := &Cva[P]{base: normalized}
 	for _, opt := range opts {
 		opt(c)
 	}
 	return c
 }
 
+// A `Cva` value is a class name generator for a component.
+//
+// The `P` type parameter is the type of the component's props.
 type Cva[P any] struct {
 	base        []string
 	variants    []classProducer[P]
 	classJoiner func(parts []string) string
 }
 
+// Generate the class list for the component based on the props.
 func (c *Cva[P]) ClassName(props P) string {
 	parts := c.base
 	for _, v := range c.variants {
@@ -107,18 +118,42 @@ func (c *Cva[P]) ClassName(props P) string {
 	return joiner(parts)
 }
 
+// An `Option` is a function that configures a `Cva`, usually by defining
+// variants.
 type Option[P any] func(*Cva[P])
 
-func WithVariant[P any, V comparable](
+// Define a variant as a map of values to class lists.
+//
+// The `classesMap` argument accepts both `map[V]string` and `map[V][]string`,
+// where the key is the variant value for which the associated class list in the
+// map value will be applied.
+func WithVariant[P any, V comparable, M map[V]string | map[V][]string](
 	getter func(P) V,
-	classesMap map[V][]string,
+	classesMap M,
 ) Option[P] {
 	return func(c *Cva[P]) {
-		tv := mapVariant[P, V]{getter, classesMap}
+		var normalized map[V][]string
+		if mapOfSlices, ok := any(classesMap).(map[V][]string); ok {
+			normalized = mapOfSlices
+		} else {
+			normalized = make(map[V][]string)
+			for k, v := range any(classesMap).(map[V]string) {
+				normalized[k] = []string{v}
+			}
+		}
+
+		tv := mapVariant[P, V]{getter, normalized}
 		c.variants = append(c.variants, tv)
 	}
 }
 
+// Define a variant as a set of variant value pairs and associated class lists.
+//
+// The `getter` function should return a tuple of values corresponding to the
+// compound key.
+//
+// The `compounds` argument should be a list of `VariantCompound` values, which
+// can be created using the `WithCompound` helper.
 func WithCompoundVariant[P any, V1 comparable, V2 comparable](
 	getter func(P) (V1, V2),
 	compounds ...VariantCompound[V1, V2],
@@ -133,14 +168,19 @@ func WithCompoundVariant[P any, V1 comparable, V2 comparable](
 	}
 }
 
+// Create a `VariantCompound` value.
+//
+// The `v1` and `v2` arguments should be the variant values to be assigned to
+// the `VariantCompound` and are used as a unique identifier for the compound.
 func WithCompound[V1 comparable, V2 comparable](
 	v1 V1,
 	v2 V2,
-	classes []string,
+	classes ...string,
 ) VariantCompound[V1, V2] {
 	return VariantCompound[V1, V2]{V1: v1, V2: v2, Classes: classes}
 }
 
+// Define a variant that applies a class list based on a predicate function.
 func WithPredicateVariant[P any](
 	test func(P) bool,
 	classes ...string,
@@ -151,15 +191,18 @@ func WithPredicateVariant[P any](
 	}
 }
 
+// Apply all the classes returned from the supplied getter function.
 func WithClasses[P any](
 	getter func(P) []string,
 ) Option[P] {
 	return func(c *Cva[P]) {
-		nv := identityApplicator[P]{getter}
+		nv := staticClassList[P]{getter}
 		c.variants = append(c.variants, nv)
 	}
 }
 
+// Define a custom class joiner function. By default, the class joiner is
+// `strings.Join(parts, " ")`.
 func WithClassJoiner[P any](joiner func(parts []string) string) Option[P] {
 	return func(c *Cva[P]) {
 		c.classJoiner = joiner
