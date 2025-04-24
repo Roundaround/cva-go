@@ -13,8 +13,8 @@ func TestCva(t *testing.T) {
 			}
 
 			button := NewCva(
-				WithStaticClasses[Props]("button"),
-				WithVariant(
+				StaticClasses[Props]("button"),
+				Variant(
 					func(p Props) string { return p.Size },
 					map[string]string{
 						"small":  "button-small",
@@ -67,8 +67,8 @@ func TestCva(t *testing.T) {
 			}
 
 			button := NewCva(
-				WithStaticClasses[Props]("button"),
-				WithVariant(
+				StaticClasses[Props]("button"),
+				Variant(
 					func(p Props) string { return p.Size },
 					map[string][]string{
 						"small":  {"button-small"},
@@ -123,11 +123,11 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			WithStaticClasses[Props]("button"),
-			WithCompoundVariant(
+			StaticClasses[Props]("button"),
+			CompoundVariant(
 				func(p Props) (string, string) { return p.Size, p.Color },
-				WithCompound("small", "red", "button-small-red"),
-				WithCompound("large", "blue", "button-large-blue"),
+				NewCompound("small", "red", "button-small-red"),
+				NewCompound("large", "blue", "button-large-blue"),
 			),
 		)
 
@@ -170,12 +170,12 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			WithStaticClasses[Props]("button"),
-			WithPredicateVariant(
+			StaticClasses[Props]("button"),
+			PredicateVariant(
 				func(p Props) bool { return p.IsDisabled },
 				"button-disabled",
 			),
-			WithPredicateVariant(
+			PredicateVariant(
 				func(p Props) bool { return p.IsLoading },
 				"button-loading",
 			),
@@ -221,7 +221,7 @@ func TestCva(t *testing.T) {
 	t.Run("static_classes", func(t *testing.T) {
 		t.Run("single_class", func(t *testing.T) {
 			type Props struct{}
-			button := NewCva(WithStaticClasses[Props]("button"))
+			button := NewCva(StaticClasses[Props]("button"))
 			got := button.ClassName(Props{})
 			want := "button"
 			if got != want {
@@ -231,7 +231,7 @@ func TestCva(t *testing.T) {
 
 		t.Run("multiple_classes", func(t *testing.T) {
 			type Props struct{}
-			button := NewCva(WithStaticClasses[Props]("button", "base"))
+			button := NewCva(StaticClasses[Props]("button", "base"))
 			got := button.ClassName(Props{})
 			want := "button base"
 			if got != want {
@@ -246,8 +246,8 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			WithStaticClasses[Props]("button"),
-			WithPropsClasses(func(p Props) []string {
+			StaticClasses[Props]("button"),
+			PropsClasses(func(p Props) []string {
 				return p.CustomClasses
 			}),
 		)
@@ -285,8 +285,8 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			WithStaticClasses[Props]("button"),
-			WithVariant(
+			StaticClasses[Props]("button"),
+			Variant(
 				func(p Props) string { return p.Size },
 				map[string]string{"small": "button", "medium": "button"},
 			),
@@ -309,9 +309,9 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			WithContext[ButtonProps](ctx),
-			WithStaticClasses[ButtonProps]("button"),
-			WithVariant(
+			Context[ButtonProps](ctx),
+			StaticClasses[ButtonProps]("button"),
+			Variant(
 				func(p ButtonProps) string { return p.size },
 				map[string]string{
 					"small":  "small",

@@ -19,9 +19,9 @@ func Example() {
 
 	// Create a button with the context
 	button := cva.NewCva(
-		cva.WithContext[Props](ctx),
-		cva.WithStaticClasses[Props]("inline-flex items-center justify-center"),
-		cva.WithVariant(
+		cva.Context[Props](ctx),
+		cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+		cva.Variant(
 			func(p Props) string { return p.Size },
 			map[string]string{
 				"small":  "h-9 px-3",
@@ -33,9 +33,9 @@ func Example() {
 
 	// Create another button with the same context
 	button2 := cva.NewCva(
-		cva.WithContext[Props](ctx),
-		cva.WithStaticClasses[Props]("button-base"),
-		cva.WithVariant(
+		cva.Context[Props](ctx),
+		cva.StaticClasses[Props]("button-base"),
+		cva.Variant(
 			func(p Props) string { return p.Size },
 			map[string]string{
 				"small":  "button-small",
@@ -57,9 +57,9 @@ func Example() {
 	})
 
 	button3 := cva.NewCva(
-		cva.WithContext[Props](altCtx),
-		cva.WithStaticClasses[Props]("button-base"),
-		cva.WithVariant(
+		cva.Context[Props](altCtx),
+		cva.StaticClasses[Props]("button-base"),
+		cva.Variant(
 			func(p Props) string { return p.Size },
 			map[string]string{
 				"small":  "button-small",

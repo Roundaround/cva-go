@@ -1,4 +1,4 @@
-package button
+package templ
 
 import (
 	"github.com/Roundaround/cva-go"
@@ -20,8 +20,8 @@ type ButtonProps struct {
 }
 
 var button = cva.NewCva(
-	cva.WithStaticClasses[ButtonProps]("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"),
-	cva.WithVariant(
+	cva.StaticClasses[ButtonProps]("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"),
+	cva.Variant(
 		func(p ButtonProps) Size { return p.size },
 		map[Size]string{
 			Small:  "h-9 px-3",
@@ -29,7 +29,7 @@ var button = cva.NewCva(
 			Large:  "h-11 px-8",
 		},
 	),
-	cva.WithPropsClasses(func(p ButtonProps) []string {
+	cva.PropsClasses(func(p ButtonProps) []string {
 		return p.classes
 	}),
 )

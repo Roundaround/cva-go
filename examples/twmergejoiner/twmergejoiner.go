@@ -16,9 +16,9 @@ var ctx = cva.NewCvaContext().WithClassJoiner(func(parts []string) string {
 })
 
 var Button = cva.NewCva(
-	cva.WithContext[Props](ctx),
-	cva.WithStaticClasses[Props]("inline-flex items-center justify-center py-1"),
-	cva.WithVariant(
+	cva.Context[Props](ctx),
+	cva.StaticClasses[Props]("inline-flex items-center justify-center py-1"),
+	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-9 px-3",

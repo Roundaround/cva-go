@@ -4,45 +4,45 @@ import (
 	"strings"
 )
 
-// Context holds configuration for CVA instances.
-type Context struct {
+// CvaContext holds configuration for Cva instances.
+type CvaContext struct {
 	classJoiner func(parts []string) string
 }
 
-// NewCvaContext creates a new Context with default configuration.
-func NewCvaContext() *Context {
-	return &Context{
+// NewCvaContext creates a new CvaContext with default configuration.
+func NewCvaContext() *CvaContext {
+	return &CvaContext{
 		classJoiner: defaultClassJoiner,
 	}
 }
 
-// WithClassJoiner returns a new Context with the specified class joiner.
-func (ctx *Context) WithClassJoiner(joiner func(parts []string) string) *Context {
-	return &Context{
+// WithClassJoiner returns a new CvaContext with the specified class joiner.
+func (ctx *CvaContext) WithClassJoiner(joiner func(parts []string) string) *CvaContext {
+	return &CvaContext{
 		classJoiner: joiner,
 	}
 }
 
-// WithDefaultClassJoiner returns a new Context with the default class joiner.
+// WithDefaultClassJoiner returns a new CvaContext with the default class joiner.
 //
 // The default class joiner concatenates parts with a space using strings.Join.
-func (ctx *Context) WithDefaultClassJoiner() *Context {
+func (ctx *CvaContext) WithDefaultClassJoiner() *CvaContext {
 	return ctx.WithClassJoiner(defaultClassJoiner)
 }
 
-// WithDedupingClassJoiner returns a new Context with the deduping class joiner.
+// WithDedupingClassJoiner returns a new CvaContext with the deduping class joiner.
 //
 // The deduping class joiner splits parts by spaces, deduplicates them, and
 // concatenates them with a space using strings.Join, preserving the order of
 // the first occurrence of each class.
-func (ctx *Context) WithDedupingClassJoiner() *Context {
+func (ctx *CvaContext) WithDedupingClassJoiner() *CvaContext {
 	return ctx.WithClassJoiner(dedupingClassJoiner)
 }
 
 // NewCva creates a new Cva instance.
 //
 // The opts argument is a list of options to configure the Cva. See
-// WithContext, WithStaticClasses, and WithVariant for some examples.
+// Context, StaticClasses, and Variant for some examples.
 func NewCva[P any](opts ...Option[P]) *Cva[P] {
 	c := &Cva[P]{}
 	for _, opt := range opts {
@@ -56,7 +56,7 @@ func NewCva[P any](opts ...Option[P]) *Cva[P] {
 // The P type parameter is the type of the component's props.
 type Cva[P any] struct {
 	producers []classProducer[P]
-	ctx       *Context
+	ctx       *CvaContext
 }
 
 // ClassName generates the class list for the component based on the props.
@@ -75,27 +75,27 @@ func (c *Cva[P]) ClassName(props P) string {
 // Option is a function that configures a Cva instance.
 type Option[P any] func(*Cva[P])
 
-// WithContext sets the context for the Cva instance.
-func WithContext[P any](ctx *Context) Option[P] {
+// Context sets the context for the Cva instance.
+func Context[P any](ctx *CvaContext) Option[P] {
 	return func(c *Cva[P]) {
 		c.ctx = ctx
 	}
 }
 
-// WithStaticClasses defines a static class list for the component to be applied
+// StaticClasses defines a static class list for the component to be applied
 // regardless of the component's props.
-func WithStaticClasses[P any](classes ...string) Option[P] {
+func StaticClasses[P any](classes ...string) Option[P] {
 	return func(c *Cva[P]) {
 		c.producers = append(c.producers, staticClassList[P]{func(P) []string { return classes }})
 	}
 }
 
-// WithVariant defines a variant as a map of values to class lists.
+// Variant defines a variant as a map of values to class lists.
 //
 // The classesMap argument accepts both map[V]string and map[V][]string,
 // where the key is the variant value for which the associated class list in the
 // map value will be applied.
-func WithVariant[P any, V comparable, M map[V]string | map[V][]string](
+func Variant[P any, V comparable, M map[V]string | map[V][]string](
 	getter func(P) V,
 	classesMap M,
 ) Option[P] {
@@ -115,17 +115,17 @@ func WithVariant[P any, V comparable, M map[V]string | map[V][]string](
 	}
 }
 
-// WithCompoundVariant defines a variant as a set of variant value pairs and associated class lists.
+// CompoundVariant defines a variant as a set of variant value pairs and associated class lists.
 //
 // The getter function should return a tuple of values corresponding to the
 // compound key. Whenever this exact tuple of values is encountered, the
 // associated class list will be applied.
 //
-// The compounds argument should be a list of VariantCompound values, which
-// can be created using the WithCompound helper.
-func WithCompoundVariant[P any, V1 comparable, V2 comparable](
+// The compounds argument should be a list of Compound values, which
+// can be created using the NewCompound helper.
+func CompoundVariant[P any, V1 comparable, V2 comparable](
 	getter func(P) (V1, V2),
-	compounds ...VariantCompound[V1, V2],
+	compounds ...Compound[V1, V2],
 ) Option[P] {
 	return func(c *Cva[P]) {
 		classesMap := make(map[compoundKey[V1, V2]][]string)
@@ -137,30 +137,31 @@ func WithCompoundVariant[P any, V1 comparable, V2 comparable](
 	}
 }
 
-// WithCompound creates a VariantCompound value. For use in WithCompoundVariant.
+// NewCompound creates a Compound value. For use in CompoundVariant.
 //
 // The v1 and v2 arguments should be the variant values to match against returned
-// by the getter function in WithCompoundVariant. Each pair of values should be
+// by the getter function in CompoundVariant. Each pair of values should be
 // unique, and adding the same pair of values more than once will result in the
 // last occurrence being used.
-func WithCompound[V1 comparable, V2 comparable](
+func NewCompound[V1 comparable, V2 comparable](
 	v1 V1,
 	v2 V2,
 	classes ...string,
-) VariantCompound[V1, V2] {
-	return VariantCompound[V1, V2]{V1: v1, V2: v2, Classes: classes}
+) Compound[V1, V2] {
+	return Compound[V1, V2]{V1: v1, V2: v2, Classes: classes}
 }
 
-// VariantCompound is a set of variant value pairs and associated class lists,
-// used in conjunction with WithCompoundVariant.
-type VariantCompound[V1 comparable, V2 comparable] struct {
+// Compound is a set of variant value pairs and associated class lists,
+// used in conjunction with CompoundVariant.
+type Compound[V1 comparable, V2 comparable] struct {
 	V1      V1
 	V2      V2
 	Classes []string
 }
 
-// WithPredicateVariant defines a variant that applies a class list based on a predicate function.
-func WithPredicateVariant[P any](
+// PredicateVariant defines a variant that applies a class list based on a predicate
+// function.
+func PredicateVariant[P any](
 	test func(P) bool,
 	classes ...string,
 ) Option[P] {
@@ -170,8 +171,8 @@ func WithPredicateVariant[P any](
 	}
 }
 
-// WithPropsClasses applies all the classes returned from the supplied getter function.
-func WithPropsClasses[P any](
+// PropsClasses applies all the classes returned from the supplied getter function.
+func PropsClasses[P any](
 	getter func(P) []string,
 ) Option[P] {
 	return func(c *Cva[P]) {

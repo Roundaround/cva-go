@@ -12,12 +12,12 @@ type Props struct {
 }
 
 var Button = cva.NewCva(
-	cva.WithStaticClasses[Props]("button"),
-	cva.WithPredicateVariant(
+	cva.StaticClasses[Props]("button"),
+	cva.PredicateVariant(
 		func(p Props) bool { return p.Loading },
 		"button-loading",
 	),
-	cva.WithPredicateVariant(
+	cva.PredicateVariant(
 		func(p Props) bool { return p.Disabled || p.Loading },
 		"button-disabled",
 	),

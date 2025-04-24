@@ -12,8 +12,8 @@ type Props struct {
 }
 
 var Button = cva.NewCva(
-	cva.WithStaticClasses[Props]("inline-flex items-center justify-center"),
-	cva.WithVariant(
+	cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-8",
@@ -21,7 +21,7 @@ var Button = cva.NewCva(
 			"large":  "h-12",
 		},
 	),
-	cva.WithVariant(
+	cva.Variant(
 		func(p Props) string { return p.Style },
 		map[string]string{
 			"icon":    "bg-gray-100 rounded-full aspect-square",
@@ -29,11 +29,11 @@ var Button = cva.NewCva(
 			"link":    "text-blue-500",
 		},
 	),
-	cva.WithCompoundVariant(
+	cva.CompoundVariant(
 		func(p Props) (string, string) { return p.Size, p.Style },
-		cva.WithCompound("small", "icon", "[&_svg]:size-4"),
-		cva.WithCompound("medium", "icon", "[&_svg]:size-5"),
-		cva.WithCompound("large", "icon", "[&_svg]:size-6"),
+		cva.NewCompound("small", "icon", "[&_svg]:size-4"),
+		cva.NewCompound("medium", "icon", "[&_svg]:size-5"),
+		cva.NewCompound("large", "icon", "[&_svg]:size-6"),
 	),
 )
 
