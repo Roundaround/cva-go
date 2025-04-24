@@ -19,44 +19,6 @@ import (
 )
 
 func TestExamples(t *testing.T) {
-	t.Run("simplecase", func(t *testing.T) {
-		base := "inline-flex items-center justify-center"
-		small := "h-9 px-3"
-		medium := "h-10 px-4 py-2"
-		large := "h-11 px-8 py-3"
-
-		tests := []struct {
-			name string
-			size string
-			want string
-		}{
-			{
-				name: "small",
-				size: "small",
-				want: base + " " + small,
-			},
-			{
-				name: "medium",
-				size: "medium",
-				want: base + " " + medium,
-			},
-			{
-				name: "large",
-				size: "large",
-				want: base + " " + large,
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := simplecase.Button.ClassName(simplecase.Props{Size: test.size})
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
 	t.Run("compoundvariants", func(t *testing.T) {
 		base := "inline-flex items-center justify-center"
 		small := "h-8"
@@ -142,104 +104,6 @@ func TestExamples(t *testing.T) {
 		}
 	})
 
-	t.Run("predicatevariants", func(t *testing.T) {
-		tests := []struct {
-			name     string
-			loading  bool
-			disabled bool
-			want     string
-		}{
-			{
-				name:     "loading+disabled",
-				loading:  true,
-				disabled: true,
-				want:     "button button-loading button-disabled",
-			},
-			{
-				name:     "loading+!disabled",
-				loading:  true,
-				disabled: false,
-				want:     "button button-loading button-disabled",
-			},
-			{
-				name:     "!loading+disabled",
-				loading:  false,
-				disabled: true,
-				want:     "button button-disabled",
-			},
-			{
-				name:     "!loading+!disabled",
-				loading:  false,
-				disabled: false,
-				want:     "button",
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := predicatevariants.Button.ClassName(predicatevariants.Props{Loading: test.loading, Disabled: test.disabled})
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
-	t.Run("staticclasses", func(t *testing.T) {
-		tests := []struct {
-			name          string
-			size          string
-			customClasses []string
-			want          string
-		}{
-			{
-				name:          "small+single",
-				size:          "small",
-				customClasses: []string{"bg-red-500"},
-				want:          "inline-flex items-center justify-center h-9 px-3 bg-red-500",
-			},
-			{
-				name:          "small+multiple",
-				size:          "small",
-				customClasses: []string{"bg-red-500", "rounded-md"},
-				want:          "inline-flex items-center justify-center h-9 px-3 bg-red-500 rounded-md",
-			},
-			{
-				name:          "medium+single",
-				size:          "medium",
-				customClasses: []string{"bg-red-500"},
-				want:          "inline-flex items-center justify-center h-10 px-4 py-2 bg-red-500",
-			},
-			{
-				name:          "medium+multiple",
-				size:          "medium",
-				customClasses: []string{"bg-red-500", "rounded-md"},
-				want:          "inline-flex items-center justify-center h-10 px-4 py-2 bg-red-500 rounded-md",
-			},
-			{
-				name:          "large+single",
-				size:          "large",
-				customClasses: []string{"bg-red-500"},
-				want:          "inline-flex items-center justify-center h-11 px-8 py-3 bg-red-500",
-			},
-			{
-				name:          "large+multiple",
-				size:          "large",
-				customClasses: []string{"bg-red-500", "rounded-md"},
-				want:          "inline-flex items-center justify-center h-11 px-8 py-3 bg-red-500 rounded-md",
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := staticclasses.Button.ClassName(staticclasses.Props{Size: test.size, CustomClasses: test.customClasses})
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
 	t.Run("dedupingjoiner", func(t *testing.T) {
 		tests := []struct {
 			name string
@@ -266,125 +130,6 @@ func TestExamples(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
 				got := dedupingjoiner.Button.ClassName(dedupingjoiner.Props{Size: test.size})
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
-	t.Run("templintegration", func(t *testing.T) {
-		// Note: Because twmerge.Merge is non-deterministic, we'll create a basic
-		// HTML string with the class attribute set directly as the output of
-		// twmerge.Merge to generate the expected outputs at runtime. See the note
-		// below in the twmergejoiner test for more details.
-
-		base := "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
-		small := "h-9 px-3"
-		medium := "h-10 px-4 py-2"
-		large := "h-11 px-8 py-3"
-		bg := "bg-red-500"
-
-		goldenButton := func(classes ...string) string {
-			return fmt.Sprintf(`<button class="%s"></button>`, twmerge.Merge(classes...))
-		}
-
-		tests := []struct {
-			name    string
-			size    templintegration.Size
-			classes []string
-			want    string
-		}{
-			{
-				name:    "small",
-				size:    templintegration.Small,
-				classes: []string{},
-				want:    goldenButton(base, small),
-			},
-			{
-				name:    "medium",
-				size:    templintegration.Medium,
-				classes: []string{},
-				want:    goldenButton(base, medium),
-			},
-			{
-				name:    "large",
-				size:    templintegration.Large,
-				classes: []string{},
-				want:    goldenButton(base, large),
-			},
-			{
-				name:    "small+bg",
-				size:    templintegration.Small,
-				classes: []string{bg},
-				want:    goldenButton(base, small, bg),
-			},
-			{
-				name:    "medium+bg",
-				size:    templintegration.Medium,
-				classes: []string{bg},
-				want:    goldenButton(base, medium, bg),
-			},
-			{
-				name:    "large+bg",
-				size:    templintegration.Large,
-				classes: []string{bg},
-				want:    goldenButton(base, large, bg),
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				buf := new(bytes.Buffer)
-				props := templintegration.ButtonProps{
-					Classes: test.classes,
-					Size:    test.size,
-				}
-				templintegration.Button(props).Render(context.Background(), buf)
-				got := buf.String()
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
-	t.Run("twmergejoiner", func(t *testing.T) {
-		// Note: We need to call twmerge.Merge to generate the expected outputs at
-		// runtime. While it seems to be deterministic across a single program
-		// execution due to its internal cache, the output is not guaranteed across
-		// separate runs.
-
-		base := "inline-flex items-center justify-center py-1"
-		small := "h-9 px-3"
-		medium := "h-10 px-4 py-2"
-		large := "h-11 px-8 py-3"
-
-		tests := []struct {
-			name string
-			size string
-			want string
-		}{
-			{
-				name: "small",
-				size: "small",
-				want: twmerge.Merge(base, small),
-			},
-			{
-				name: "medium",
-				size: "medium",
-				want: twmerge.Merge(base, medium),
-			},
-			{
-				name: "large",
-				size: "large",
-				want: twmerge.Merge(base, large),
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := twmergejoiner.Button.ClassName(twmergejoiner.Props{Size: test.size})
 				if got != test.want {
 					t.Errorf("got %s, want %s", got, test.want)
 				}
@@ -509,5 +254,260 @@ func TestExamples(t *testing.T) {
 				})
 			}
 		})
+	})
+
+	t.Run("predicatevariants", func(t *testing.T) {
+		tests := []struct {
+			name     string
+			loading  bool
+			disabled bool
+			want     string
+		}{
+			{
+				name:     "loading+disabled",
+				loading:  true,
+				disabled: true,
+				want:     "button button-loading button-disabled",
+			},
+			{
+				name:     "loading+!disabled",
+				loading:  true,
+				disabled: false,
+				want:     "button button-loading button-disabled",
+			},
+			{
+				name:     "!loading+disabled",
+				loading:  false,
+				disabled: true,
+				want:     "button button-disabled",
+			},
+			{
+				name:     "!loading+!disabled",
+				loading:  false,
+				disabled: false,
+				want:     "button",
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := predicatevariants.Button.ClassName(predicatevariants.Props{Loading: test.loading, Disabled: test.disabled})
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("simplecase", func(t *testing.T) {
+		base := "inline-flex items-center justify-center"
+		small := "h-9 px-3"
+		medium := "h-10 px-4 py-2"
+		large := "h-11 px-8 py-3"
+
+		tests := []struct {
+			name string
+			size string
+			want string
+		}{
+			{
+				name: "small",
+				size: "small",
+				want: base + " " + small,
+			},
+			{
+				name: "medium",
+				size: "medium",
+				want: base + " " + medium,
+			},
+			{
+				name: "large",
+				size: "large",
+				want: base + " " + large,
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := simplecase.Button.ClassName(simplecase.Props{Size: test.size})
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("staticclasses", func(t *testing.T) {
+		tests := []struct {
+			name          string
+			size          string
+			customClasses []string
+			want          string
+		}{
+			{
+				name:          "small+single",
+				size:          "small",
+				customClasses: []string{"bg-red-500"},
+				want:          "inline-flex items-center justify-center h-9 px-3 bg-red-500",
+			},
+			{
+				name:          "small+multiple",
+				size:          "small",
+				customClasses: []string{"bg-red-500", "rounded-md"},
+				want:          "inline-flex items-center justify-center h-9 px-3 bg-red-500 rounded-md",
+			},
+			{
+				name:          "medium+single",
+				size:          "medium",
+				customClasses: []string{"bg-red-500"},
+				want:          "inline-flex items-center justify-center h-10 px-4 py-2 bg-red-500",
+			},
+			{
+				name:          "medium+multiple",
+				size:          "medium",
+				customClasses: []string{"bg-red-500", "rounded-md"},
+				want:          "inline-flex items-center justify-center h-10 px-4 py-2 bg-red-500 rounded-md",
+			},
+			{
+				name:          "large+single",
+				size:          "large",
+				customClasses: []string{"bg-red-500"},
+				want:          "inline-flex items-center justify-center h-11 px-8 py-3 bg-red-500",
+			},
+			{
+				name:          "large+multiple",
+				size:          "large",
+				customClasses: []string{"bg-red-500", "rounded-md"},
+				want:          "inline-flex items-center justify-center h-11 px-8 py-3 bg-red-500 rounded-md",
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := staticclasses.Button.ClassName(staticclasses.Props{Size: test.size, CustomClasses: test.customClasses})
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("templintegration", func(t *testing.T) {
+		// Note: Because twmerge.Merge is non-deterministic, we'll create a basic
+		// HTML string with the class attribute set directly as the output of
+		// twmerge.Merge to generate the expected outputs at runtime. See the note
+		// below in the twmergejoiner test for more details.
+
+		base := "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+		small := "h-9 px-3"
+		medium := "h-10 px-4 py-2"
+		large := "h-11 px-8 py-3"
+		bg := "bg-red-500"
+
+		goldenButton := func(classes ...string) string {
+			return fmt.Sprintf(`<button class="%s"></button>`, twmerge.Merge(classes...))
+		}
+
+		tests := []struct {
+			name    string
+			size    templintegration.Size
+			classes []string
+			want    string
+		}{
+			{
+				name:    "small",
+				size:    templintegration.Small,
+				classes: []string{},
+				want:    goldenButton(base, small),
+			},
+			{
+				name:    "medium",
+				size:    templintegration.Medium,
+				classes: []string{},
+				want:    goldenButton(base, medium),
+			},
+			{
+				name:    "large",
+				size:    templintegration.Large,
+				classes: []string{},
+				want:    goldenButton(base, large),
+			},
+			{
+				name:    "small+bg",
+				size:    templintegration.Small,
+				classes: []string{bg},
+				want:    goldenButton(base, small, bg),
+			},
+			{
+				name:    "medium+bg",
+				size:    templintegration.Medium,
+				classes: []string{bg},
+				want:    goldenButton(base, medium, bg),
+			},
+			{
+				name:    "large+bg",
+				size:    templintegration.Large,
+				classes: []string{bg},
+				want:    goldenButton(base, large, bg),
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				buf := new(bytes.Buffer)
+				props := templintegration.ButtonProps{
+					Classes: test.classes,
+					Size:    test.size,
+				}
+				templintegration.Button(props).Render(context.Background(), buf)
+				got := buf.String()
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("twmergejoiner", func(t *testing.T) {
+		// Note: We need to call twmerge.Merge to generate the expected outputs at
+		// runtime. While it seems to be deterministic across a single program
+		// execution due to its internal cache, the output is not guaranteed across
+		// separate runs.
+
+		base := "inline-flex items-center justify-center py-1"
+		small := "h-9 px-3"
+		medium := "h-10 px-4 py-2"
+		large := "h-11 px-8 py-3"
+
+		tests := []struct {
+			name string
+			size string
+			want string
+		}{
+			{
+				name: "small",
+				size: "small",
+				want: twmerge.Merge(base, small),
+			},
+			{
+				name: "medium",
+				size: "medium",
+				want: twmerge.Merge(base, medium),
+			},
+			{
+				name: "large",
+				size: "large",
+				want: twmerge.Merge(base, large),
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := twmergejoiner.Button.ClassName(twmergejoiner.Props{Size: test.size})
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
 	})
 }
