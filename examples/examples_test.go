@@ -9,6 +9,7 @@ import (
 
 	twmerge "github.com/Oudwins/tailwind-merge-go"
 	"github.com/Roundaround/cva-go/examples/compoundvariants"
+	"github.com/Roundaround/cva-go/examples/cvacontext"
 	"github.com/Roundaround/cva-go/examples/dedupingjoiner"
 	"github.com/Roundaround/cva-go/examples/inheritance"
 	"github.com/Roundaround/cva-go/examples/predicatevariants"
@@ -102,6 +103,104 @@ func TestExamples(t *testing.T) {
 				}
 			})
 		}
+	})
+
+	t.Run("cvacontext", func(t *testing.T) {
+		type testCase struct {
+			name     string
+			props    cvacontext.Props
+			expected string
+		}
+
+		// Test cases for button with custom joiner (::)
+		buttonTests := []testCase{
+			{
+				name:     "small",
+				props:    cvacontext.Props{Size: "small"},
+				expected: "inline-flex::items-center::justify-center::h-9::px-3",
+			},
+			{
+				name:     "medium",
+				props:    cvacontext.Props{Size: "medium"},
+				expected: "inline-flex::items-center::justify-center::h-10::px-4::py-2",
+			},
+			{
+				name:     "large",
+				props:    cvacontext.Props{Size: "large"},
+				expected: "inline-flex::items-center::justify-center::h-11::px-8::py-3",
+			},
+		}
+
+		// Test cases for button2 with custom joiner (::)
+		button2Tests := []testCase{
+			{
+				name:     "small",
+				props:    cvacontext.Props{Size: "small"},
+				expected: "button-base::button-small",
+			},
+			{
+				name:     "medium",
+				props:    cvacontext.Props{Size: "medium"},
+				expected: "button-base::button-medium",
+			},
+			{
+				name:     "large",
+				props:    cvacontext.Props{Size: "large"},
+				expected: "button-base::button-large",
+			},
+		}
+
+		// Test cases for button3 with space joiner
+		button3Tests := []testCase{
+			{
+				name:     "small",
+				props:    cvacontext.Props{Size: "small"},
+				expected: "button-base button-small",
+			},
+			{
+				name:     "medium",
+				props:    cvacontext.Props{Size: "medium"},
+				expected: "button-base button-medium",
+			},
+			{
+				name:     "large",
+				props:    cvacontext.Props{Size: "large"},
+				expected: "button-base button-large",
+			},
+		}
+
+		t.Run("button with custom joiner", func(t *testing.T) {
+			for _, tc := range buttonTests {
+				t.Run(tc.name, func(t *testing.T) {
+					result := cvacontext.Button.ClassName(tc.props)
+					if result != tc.expected {
+						t.Errorf("expected %q, got %q", tc.expected, result)
+					}
+				})
+			}
+		})
+
+		t.Run("button2 with custom joiner", func(t *testing.T) {
+			for _, tc := range button2Tests {
+				t.Run(tc.name, func(t *testing.T) {
+					result := cvacontext.Button2.ClassName(tc.props)
+					if result != tc.expected {
+						t.Errorf("expected %q, got %q", tc.expected, result)
+					}
+				})
+			}
+		})
+
+		t.Run("button3 with space joiner", func(t *testing.T) {
+			for _, tc := range button3Tests {
+				t.Run(tc.name, func(t *testing.T) {
+					result := cvacontext.Button3.ClassName(tc.props)
+					if result != tc.expected {
+						t.Errorf("expected %q, got %q", tc.expected, result)
+					}
+				})
+			}
+		})
 	})
 
 	t.Run("dedupingjoiner", func(t *testing.T) {
