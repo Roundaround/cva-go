@@ -28,8 +28,8 @@ type Props struct {
 }
 
 button := cva.NewCva(
-  cva.WithStaticClasses[Props]("inline-flex items-center justify-center"),
-  cva.WithVariant(
+  cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+  cva.Variant(
     func(p Props) string { return p.Size },
     map[string][]string{
       "small":  {"h-9 px-3"},
@@ -45,7 +45,7 @@ fmt.Println(button.ClassName(Props{"small"}))
 
 ### Compound variants
 
-The `WithCompoundVariant` helper allows you to apply classes based on a pair of
+The `CompoundVariant` helper allows you to apply classes based on a pair of
 values. For more than two values, check out [predicate variants](#predicate-variants)
 
 ```go
@@ -55,8 +55,8 @@ type Props struct {
 }
 
 button := cva.NewCva(
-  cva.WithStaticClasses[Props]("inline-flex items-center justify-center"),
-	cva.WithVariant(
+  cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-8",
@@ -64,7 +64,7 @@ button := cva.NewCva(
 			"large":  "h-12",
 		},
 	),
-	cva.WithVariant(
+	cva.Variant(
 		func(p Props) string { return p.Style },
 		map[string]string{
 			"icon":    "bg-gray-100 rounded-full aspect-square",
@@ -72,11 +72,11 @@ button := cva.NewCva(
 			"link":    "text-blue-500",
 		},
 	),
-	cva.WithCompoundVariant(
+	cva.CompoundVariant(
 		func(p Props) (string, string) { return p.Size, p.Style },
-		cva.WithCompound("small", "icon", "[&_svg]:size-4"),
-		cva.WithCompound("medium", "icon", "[&_svg]:size-5"),
-		cva.WithCompound("large", "icon", "[&_svg]:size-6"),
+		cva.NewCompound("small", "icon", "[&_svg]:size-4"),
+		cva.NewCompound("medium", "icon", "[&_svg]:size-5"),
+		cva.NewCompound("large", "icon", "[&_svg]:size-6"),
 	),
 )
 
@@ -87,7 +87,7 @@ fmt.Println(button.ClassName(Props{"small", "icon"}))
 
 ### Predicate variants
 
-The `WithPredicateVariant` helper lets you specify a predicate function for each
+The `PredicateVariant` helper lets you specify a predicate function for each
 class list you want to apply. When working with non-string-map values (i.e.
 bools) or more than two variant properties, predicate variants can give you more
 advanced control over when classes are applied.
@@ -99,12 +99,12 @@ type Props struct {
 }
 
 button := cva.NewCva(
-	cva.WithStaticClasses[Props]("button"),
-	cva.WithPredicateVariant(
+	cva.StaticClasses[Props]("button"),
+	cva.PredicateVariant(
 		func(p Props) bool { return p.Loading },
 		"button-loading",
 	),
-	cva.WithPredicateVariant(
+	cva.PredicateVariant(
 		func(p Props) bool { return p.Disabled || p.Loading },
 		"button-disabled",
 	),
@@ -123,9 +123,9 @@ fmt.Println(button.ClassName(Props{
 dedupingContext := cva.NewCvaContext().WithDedupingClassJoiner()
 
 button := cva.NewCva(
-  cva.WithContext[Props](dedupingContext),
-	cva.WithStaticClasses[Props]("inline-flex items-center justify-center rounded-md"),
-	cva.WithVariant(
+  cva.Context[Props](dedupingContext),
+	cva.StaticClasses[Props]("inline-flex items-center justify-center rounded-md"),
+	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-8 rounded-md",
@@ -149,9 +149,9 @@ ctx := cva.NewCvaContext().WithClassJoiner(func(parts []string) string {
 })
 
 button := cva.NewCva(
-  cva.WithContext[Props](ctx),
-  cva.WithStaticClasses[Props]("inline-flex items-center justify-center px-2 py-1"),
-  cva.WithVariant(
+  cva.Context[Props](ctx),
+  cva.StaticClasses[Props]("inline-flex items-center justify-center px-2 py-1"),
+  cva.Variant(
     func(p Props) string { return p.size },
     map[string][]string{
       "small":  {"h-9 px-3"},
@@ -163,6 +163,61 @@ button := cva.NewCva(
 
 fmt.Println(button.ClassName(Props{"medium"}))
 // Output: inline-flex items-center justify-center h-10 px-4 py-2
+```
+
+### Composition through inheritance
+
+You can compose components through inheritance by using the `Inherit` option.
+This will copy all the class lists and variants from the base Cva, allowing you
+to build upon it.
+
+```go
+type ButtonProps struct {
+	Size  string
+	Style string
+}
+
+button := cva.NewCva(
+	cva.StaticClasses[ButtonProps]("inline-flex items-center justify-center"),
+	cva.Variant(
+		func(p ButtonProps) string { return p.Size },
+		map[string]string{
+			"small":  "h-8 px-3",
+			"medium": "h-10 px-4",
+			"large":  "h-12 px-6",
+		},
+	),
+	cva.Variant(
+		func(p ButtonProps) string { return p.Style },
+		map[string]string{
+			"primary":   "bg-blue-500 text-white",
+			"secondary": "bg-gray-200 text-gray-800",
+			"outline":   "border border-gray-300 text-gray-800",
+		},
+	),
+)
+
+type LoadingButtonProps struct {
+  ButtonProps
+	Loading bool
+}
+
+loadingButton := cva.NewCva(
+	cva.Inherit(
+		button,
+		func(p LoadingButtonProps) ButtonProps { return p.ButtonProps },
+	),
+	cva.PredicateVariant(
+		func(p LoadingButtonProps) bool { return p.Loading },
+		"opacity-50 cursor-not-allowed",
+	),
+)
+
+fmt.Println(loadingButton.ClassName({
+  ButtonProps{Size: "medium", Style: "primary"},
+  Loading: true,
+}))
+// Output: inline-flex items-center justify-center h-10 px-4 bg-blue-500 text-white opacity-50 cursor-not-allowed
 ```
 
 ### Memoizing expensive property computations
@@ -184,10 +239,10 @@ type ExtendedProps struct {
 	Size string
 }
 
-base := NewCva[Props](
-	StaticClasses[Props]("button"),
-	Variant(
-		Memoize(func(p Props) string {
+base := cva.NewCva[Props](
+	cva.StaticClasses[Props]("button"),
+	cva.Variant(
+		cva.Memoize(func(p Props) string {
 			// Call to some expensive transformation function
 			return sizeString(p.Size)
 		}),
@@ -199,17 +254,17 @@ base := NewCva[Props](
 	),
 )
 
-extended := NewCva[ExtendedProps](
-	Inherit(
+extended := cva.NewCva[ExtendedProps](
+	cva.Inherit(
 		base,
-		Memoize(func(p ExtendedProps) Props {
+		cva.Memoize(func(p ExtendedProps) Props {
 			return Props{
 				// Call to some expensive transformation function
 				Size: transformSize(p.Size),
 			}
 		}),
 	),
-	Variant(
+	cva.Variant(
 		func(p ExtendedProps) string { return p.Size },
 		map[string]string{
 			"xs":  "button-small",
@@ -240,8 +295,8 @@ func tw(parts ...string) []string {
 }
 
 var Button = cva.NewCva(
-	cva.WithStaticClasses[Props](tw("inline-flex items-center justify-center")),
-	cva.WithVariant(
+	cva.StaticClasses[Props](tw("inline-flex items-center justify-center")),
+	cva.Variant(
 		func(p Props) Size { return p.size },
 		map[Size][]string{
 			Small:  tw("h-9 px-3"),

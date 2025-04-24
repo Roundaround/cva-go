@@ -253,29 +253,29 @@ func TestExamples(t *testing.T) {
 		t.Run("base-button", func(t *testing.T) {
 			tests := []struct {
 				name  string
-				props inheritance.BaseButtonProps
+				props inheritance.ButtonProps
 				want  []string
 			}{
 				{
 					name:  "small-primary",
-					props: inheritance.BaseButtonProps{Size: "small", Style: "primary"},
+					props: inheritance.ButtonProps{Size: "small", Style: "primary"},
 					want:  []string{base, small, primary},
 				},
 				{
 					name:  "medium-secondary",
-					props: inheritance.BaseButtonProps{Size: "medium", Style: "secondary"},
+					props: inheritance.ButtonProps{Size: "medium", Style: "secondary"},
 					want:  []string{base, medium, secondary},
 				},
 				{
 					name:  "large-outline",
-					props: inheritance.BaseButtonProps{Size: "large", Style: "outline"},
+					props: inheritance.ButtonProps{Size: "large", Style: "outline"},
 					want:  []string{base, large, outline},
 				},
 			}
 
 			for _, test := range tests {
 				t.Run(test.name, func(t *testing.T) {
-					got := inheritance.BaseButton.ClassName(test.props)
+					got := inheritance.Button.ClassName(test.props)
 					want := strings.Join(test.want, " ")
 					if got != want {
 						t.Errorf("got %s, want %s", got, want)
@@ -292,19 +292,28 @@ func TestExamples(t *testing.T) {
 				want  []string
 			}{
 				{
-					name:  "small-primary",
-					props: inheritance.LoadingButtonProps{Size: "small", Style: "primary", Loading: false},
-					want:  []string{base, small, primary},
+					name: "small-primary",
+					props: inheritance.LoadingButtonProps{
+						ButtonProps: inheritance.ButtonProps{Size: "small", Style: "primary"},
+						Loading:     false,
+					},
+					want: []string{base, small, primary},
 				},
 				{
-					name:  "medium-secondary-loading",
-					props: inheritance.LoadingButtonProps{Size: "medium", Style: "secondary", Loading: true},
-					want:  []string{base, medium, secondary, loading},
+					name: "medium-secondary-loading",
+					props: inheritance.LoadingButtonProps{
+						ButtonProps: inheritance.ButtonProps{Size: "medium", Style: "secondary"},
+						Loading:     true,
+					},
+					want: []string{base, medium, secondary, loading},
 				},
 				{
-					name:  "large-outline-loading",
-					props: inheritance.LoadingButtonProps{Size: "large", Style: "outline", Loading: true},
-					want:  []string{base, large, outline, loading},
+					name: "large-outline-loading",
+					props: inheritance.LoadingButtonProps{
+						ButtonProps: inheritance.ButtonProps{Size: "large", Style: "outline"},
+						Loading:     true,
+					},
+					want: []string{base, large, outline, loading},
 				},
 			}
 
@@ -327,19 +336,28 @@ func TestExamples(t *testing.T) {
 				want  []string
 			}{
 				{
-					name:  "small-primary-plus",
-					props: inheritance.IconButtonProps{Size: "small", Style: "primary", Icon: "plus"},
-					want:  []string{base, small, primary, plusIcon},
+					name: "small-primary-plus",
+					props: inheritance.IconButtonProps{
+						ButtonProps: inheritance.ButtonProps{Size: "small", Style: "primary"},
+						Icon:        "plus",
+					},
+					want: []string{base, small, primary, plusIcon},
 				},
 				{
-					name:  "medium-secondary-settings",
-					props: inheritance.IconButtonProps{Size: "medium", Style: "secondary", Icon: "settings"},
-					want:  []string{base, medium, secondary, settingsIcon},
+					name: "medium-secondary-settings",
+					props: inheritance.IconButtonProps{
+						ButtonProps: inheritance.ButtonProps{Size: "medium", Style: "secondary"},
+						Icon:        "settings",
+					},
+					want: []string{base, medium, secondary, settingsIcon},
 				},
 				{
-					name:  "large-outline-close",
-					props: inheritance.IconButtonProps{Size: "large", Style: "outline", Icon: "close"},
-					want:  []string{base, large, outline, closeIcon},
+					name: "large-outline-close",
+					props: inheritance.IconButtonProps{
+						ButtonProps: inheritance.ButtonProps{Size: "large", Style: "outline"},
+						Icon:        "close",
+					},
+					want: []string{base, large, outline, closeIcon},
 				},
 			}
 
