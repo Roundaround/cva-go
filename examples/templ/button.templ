@@ -1,7 +1,6 @@
 package button
 
 import (
-	twmerge "github.com/Oudwins/tailwind-merge-go"
 	"github.com/Roundaround/cva-go"
 )
 
@@ -21,7 +20,7 @@ type ButtonProps struct {
 }
 
 var button = cva.NewCva(
-	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors",
+	cva.WithStaticClasses[ButtonProps]("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"),
 	cva.WithVariant(
 		func(p ButtonProps) Size { return p.size },
 		map[Size]string{
@@ -30,10 +29,7 @@ var button = cva.NewCva(
 			Large:  "h-11 px-8",
 		},
 	),
-	cva.WithClassJoiner[ButtonProps](func(parts []string) string {
-		return twmerge.Merge(parts...)
-	}),
-	cva.WithClasses(func(p ButtonProps) []string {
+	cva.WithPropsClasses(func(p ButtonProps) []string {
 		return p.classes
 	}),
 )

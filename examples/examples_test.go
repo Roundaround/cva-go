@@ -6,7 +6,7 @@ import (
 
 	twmerge "github.com/Oudwins/tailwind-merge-go"
 	"github.com/Roundaround/cva-go/examples/compoundvariants"
-	"github.com/Roundaround/cva-go/examples/customclassjoining"
+	"github.com/Roundaround/cva-go/examples/dedupingjoiner"
 	"github.com/Roundaround/cva-go/examples/predicatevariants"
 	"github.com/Roundaround/cva-go/examples/simplecase"
 	"github.com/Roundaround/cva-go/examples/staticclasses"
@@ -154,7 +154,7 @@ func TestExamples(t *testing.T) {
 				name:     "loading+!disabled",
 				loading:  true,
 				disabled: false,
-				want:     "button button-loading",
+				want:     "button button-loading button-disabled",
 			},
 			{
 				name:     "!loading+disabled",
@@ -235,7 +235,7 @@ func TestExamples(t *testing.T) {
 		}
 	})
 
-	t.Run("customclassjoining", func(t *testing.T) {
+	t.Run("dedupingjoiner", func(t *testing.T) {
 		tests := []struct {
 			name string
 			size string
@@ -260,7 +260,7 @@ func TestExamples(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				got := customclassjoining.Button.ClassName(customclassjoining.Props{Size: test.size})
+				got := dedupingjoiner.Button.ClassName(dedupingjoiner.Props{Size: test.size})
 				if got != test.want {
 					t.Errorf("got %s, want %s", got, test.want)
 				}

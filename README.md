@@ -28,7 +28,7 @@ type Props struct {
 }
 
 button := cva.NewCva(
-  "inline-flex items-center justify-center",
+  cva.WithStaticClasses[Props]("inline-flex items-center justify-center"),
   cva.WithVariant(
     func(p Props) string { return p.Size },
     map[string][]string{
@@ -40,7 +40,7 @@ button := cva.NewCva(
 )
 
 fmt.Println(button.ClassName(Props{"small"}))
-// "inline-flex items-center justify-center h-9 px-3"
+// Output: inline-flex items-center justify-center h-9 px-3
 ```
 
 ### Compound variants
@@ -55,7 +55,7 @@ type Props struct {
 }
 
 button := cva.NewCva(
-  "inline-flex items-center justify-center",
+  cva.WithStaticClasses[Props]("inline-flex items-center justify-center"),
 	cva.WithVariant(
 		func(p Props) string { return p.Size },
 		map[string]string{
@@ -81,7 +81,7 @@ button := cva.NewCva(
 )
 
 fmt.Println(button.ClassName(Props{"small", "icon"}))
-// inline-flex items-center justify-center h-8 bg-gray-100 rounded-full
+// Output: inline-flex items-center justify-center h-8 bg-gray-100 rounded-full
 //   aspect-square [&_svg]:size-4
 ```
 
@@ -99,13 +99,13 @@ type Props struct {
 }
 
 button := cva.NewCva(
-	"button",
+	cva.WithStaticClasses[Props]("button"),
 	cva.WithPredicateVariant(
 		func(p Props) bool { return p.Loading },
 		"button-loading",
 	),
 	cva.WithPredicateVariant(
-		func(p Props) bool { return p.Disabled },
+		func(p Props) bool { return p.Disabled || p.Loading },
 		"button-disabled",
 	),
 )
@@ -114,56 +114,43 @@ fmt.Println(button.ClassName(Props{
   Loading:  true,
   Disabled: false,
 }))
-// button button-loading
+// Output: button button-loading button-disabled
+```
+
+### Customizing the class joining behavior
+
+```go
+dedupingContext := cva.NewCvaContext().WithDedupingClassJoiner()
+
+button := cva.NewCva(
+  cva.WithContext[Props](dedupingContext),
+	cva.WithStaticClasses[Props]("inline-flex items-center justify-center rounded-md"),
+	cva.WithVariant(
+		func(p Props) string { return p.Size },
+		map[string]string{
+			"small":  "h-8 rounded-md",
+			"medium": "h-10 rounded-md",
+			"large":  "h-12 rounded-md",
+		},
+	),
+)
+
+fmt.Println(button.ClassName(Props{"small"}))
+// Output: inline-flex items-center justify-center rounded-md h-8
 ```
 
 ### Using [tailwind-merge-go](https://github.com/Oudwins/tailwind-merge-go) to merge classes
 
 ```go
-import (
-  twmerge "github.com/Oudwins/tailwind-merge-go"
-  "github.com/Roundaround/cva-go"
-)
+import twmerge "github.com/Oudwins/tailwind-merge-go"
 
-type Props struct {
-  size string
-}
-
-button := cva.NewCva(
-  "inline-flex items-center justify-center py-1",
-  cva.WithVariant(
-    func(p Props) string { return p.size },
-    map[string][]string{
-      "small":  {"h-9 px-3"},
-      "medium": {"h-10 px-4 py-2"},
-      "large":  {"h-11 px-8 py-3"},
-    },
-  ),
-  cva.WithClassJoiner[Props](func(parts []string) string {
-    return twmerge.Merge(parts...)
-  }),
-)
-
-button.ClassName(Props{"small"})
-// "inline-flex items-center justify-center py-1 h-9 px-3"
-//                           py-1 from base ^
-
-button.ClassName(Props{"medium"})
-// "inline-flex items-center justify-center h-9 px-3 py-2"
-//                  py-1 replaced with medium's py-2 ^
-```
-
-### Change class joiner for all Cva instances
-
-```go
-cva.FallbackClassJoiner = func(parts []string) string {
+ctx := cva.NewCvaContext().WithClassJoiner(func(parts []string) string {
   return twmerge.Merge(parts...)
-}
-
-// . . .
+})
 
 button := cva.NewCva(
-  "inline-flex items-center justify-center py-1",
+  cva.WithContext[Props](ctx),
+  cva.WithStaticClasses[Props]("inline-flex items-center justify-center px-2 py-1"),
   cva.WithVariant(
     func(p Props) string { return p.size },
     map[string][]string{
@@ -172,8 +159,10 @@ button := cva.NewCva(
       "large":  {"h-11 px-8 py-3"},
     },
   ),
-  // cva.WithClassJoiner(...) no longer needed; inherited from fallback
 )
+
+fmt.Println(button.ClassName(Props{"medium"}))
+// Output: inline-flex items-center justify-center h-10 px-4 py-2
 ```
 
 ### Additional examples
@@ -196,7 +185,7 @@ func tw(parts ...string) []string {
 }
 
 var Button = cva.NewCva(
-	tw("inline-flex items-center justify-center"),
+	cva.WithStaticClasses[Props](tw("inline-flex items-center justify-center")),
 	cva.WithVariant(
 		func(p Props) Size { return p.size },
 		map[Size][]string{

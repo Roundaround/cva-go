@@ -13,7 +13,7 @@ func TestCva(t *testing.T) {
 			}
 
 			button := NewCva(
-				"button",
+				WithStaticClasses[Props]("button"),
 				WithVariant(
 					func(p Props) string { return p.Size },
 					map[string]string{
@@ -67,7 +67,7 @@ func TestCva(t *testing.T) {
 			}
 
 			button := NewCva(
-				"button",
+				WithStaticClasses[Props]("button"),
 				WithVariant(
 					func(p Props) string { return p.Size },
 					map[string][]string{
@@ -123,7 +123,7 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			"button",
+			WithStaticClasses[Props]("button"),
 			WithCompoundVariant(
 				func(p Props) (string, string) { return p.Size, p.Color },
 				WithCompound("small", "red", "button-small-red"),
@@ -170,7 +170,7 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			"button",
+			WithStaticClasses[Props]("button"),
 			WithPredicateVariant(
 				func(p Props) bool { return p.IsDisabled },
 				"button-disabled",
@@ -218,35 +218,10 @@ func TestCva(t *testing.T) {
 		}
 	})
 
-	t.Run("custom_class_joiner", func(t *testing.T) {
-		type Props struct {
-			Size string
-		}
-
-		button := NewCva(
-			"button",
-			WithVariant(
-				func(p Props) string { return p.Size },
-				map[string]string{
-					"small": "button-small",
-				},
-			),
-			WithClassJoiner[Props](func(parts []string) string {
-				return strings.Join(parts, "::")
-			}),
-		)
-
-		got := button.ClassName(Props{Size: "small"})
-		want := "button::button-small"
-		if got != want {
-			t.Errorf("got %s, want %s", got, want)
-		}
-	})
-
-	t.Run("base_classes", func(t *testing.T) {
-		t.Run("string_base", func(t *testing.T) {
+	t.Run("static_classes", func(t *testing.T) {
+		t.Run("single_class", func(t *testing.T) {
 			type Props struct{}
-			button := NewCva[Props]("button")
+			button := NewCva(WithStaticClasses[Props]("button"))
 			got := button.ClassName(Props{})
 			want := "button"
 			if got != want {
@@ -254,9 +229,9 @@ func TestCva(t *testing.T) {
 			}
 		})
 
-		t.Run("string_slice_base", func(t *testing.T) {
+		t.Run("multiple_classes", func(t *testing.T) {
 			type Props struct{}
-			button := NewCva[Props]([]string{"button", "base"})
+			button := NewCva(WithStaticClasses[Props]("button", "base"))
 			got := button.ClassName(Props{})
 			want := "button base"
 			if got != want {
@@ -265,14 +240,14 @@ func TestCva(t *testing.T) {
 		})
 	})
 
-	t.Run("with_classes", func(t *testing.T) {
+	t.Run("with_props_classes", func(t *testing.T) {
 		type Props struct {
 			CustomClasses []string
 		}
 
 		button := NewCva(
-			"button",
-			WithClasses(func(p Props) []string {
+			WithStaticClasses[Props]("button"),
+			WithPropsClasses(func(p Props) []string {
 				return p.CustomClasses
 			}),
 		)
@@ -310,7 +285,7 @@ func TestCva(t *testing.T) {
 		}
 
 		button := NewCva(
-			"button",
+			WithStaticClasses[Props]("button"),
 			WithVariant(
 				func(p Props) string { return p.Size },
 				map[string]string{"small": "button", "medium": "button"},
@@ -324,18 +299,18 @@ func TestCva(t *testing.T) {
 		}
 	})
 
-	t.Run("global_class_joiner", func(t *testing.T) {
-		classJoiner := FallbackClassJoiner
-		FallbackClassJoiner = func(parts []string) string {
+	t.Run("custom_class_joiner", func(t *testing.T) {
+		ctx := NewCvaContext().WithClassJoiner(func(parts []string) string {
 			return strings.Join(parts, "::")
-		}
+		})
 
 		type ButtonProps struct {
 			size string
 		}
 
 		button := NewCva(
-			"button",
+			WithContext[ButtonProps](ctx),
+			WithStaticClasses[ButtonProps]("button"),
 			WithVariant(
 				func(p ButtonProps) string { return p.size },
 				map[string]string{
@@ -376,7 +351,5 @@ func TestCva(t *testing.T) {
 				}
 			})
 		}
-
-		FallbackClassJoiner = classJoiner
 	})
 }
