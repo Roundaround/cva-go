@@ -1,6 +1,7 @@
-package templ
+package templintegration
 
 import (
+	twmerge "github.com/Oudwins/tailwind-merge-go"
 	"github.com/Roundaround/cva-go"
 )
 
@@ -15,22 +16,27 @@ const (
 const DefaultSize = Medium
 
 type ButtonProps struct {
-	classes []string // Classes applied after the built-in ones
-	size    Size     // The variant we want to bind with cva-go
+	Classes []string // Classes applied after the built-in ones
+	Size    Size     // The variant we want to bind with cva-go
 }
 
+var ctx = cva.NewCvaContext().WithClassJoiner(func(parts []string) string {
+	return twmerge.Merge(parts...)
+})
+
 var button = cva.NewCva(
+	cva.Context[ButtonProps](ctx),
 	cva.StaticClasses[ButtonProps]("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"),
 	cva.Variant(
-		func(p ButtonProps) Size { return p.size },
+		func(p ButtonProps) Size { return p.Size },
 		map[Size]string{
 			Small:  "h-9 px-3",
 			Medium: "h-10 px-4 py-2",
-			Large:  "h-11 px-8",
+			Large:  "h-11 px-8 py-3",
 		},
 	),
 	cva.PropsClasses(func(p ButtonProps) []string {
-		return p.classes
+		return p.Classes
 	}),
 )
 

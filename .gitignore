@@ -23,3 +23,6 @@ go.work.sum
 
 # env file
 .env
+
+# Compiled templ go files (from examples/templ)
+*_templ.go

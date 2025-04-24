@@ -1,6 +1,9 @@
 package examples
 
 import (
+	"bytes"
+	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -10,6 +13,7 @@ import (
 	"github.com/Roundaround/cva-go/examples/predicatevariants"
 	"github.com/Roundaround/cva-go/examples/simplecase"
 	"github.com/Roundaround/cva-go/examples/staticclasses"
+	"github.com/Roundaround/cva-go/examples/templintegration"
 	"github.com/Roundaround/cva-go/examples/twmergejoiner"
 )
 
@@ -268,10 +272,87 @@ func TestExamples(t *testing.T) {
 		}
 	})
 
+	t.Run("templintegration", func(t *testing.T) {
+		// Note: Because twmerge.Merge is non-deterministic, we'll create a basic
+		// HTML string with the class attribute set directly as the output of
+		// twmerge.Merge to generate the expected outputs at runtime. See the note
+		// below in the twmergejoiner test for more details.
+
+		base := "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+		small := "h-9 px-3"
+		medium := "h-10 px-4 py-2"
+		large := "h-11 px-8 py-3"
+		bg := "bg-red-500"
+
+		goldenButton := func(classes ...string) string {
+			return fmt.Sprintf(`<button class="%s"></button>`, twmerge.Merge(classes...))
+		}
+
+		tests := []struct {
+			name    string
+			size    templintegration.Size
+			classes []string
+			want    string
+		}{
+			{
+				name:    "small",
+				size:    templintegration.Small,
+				classes: []string{},
+				want:    goldenButton(base, small),
+			},
+			{
+				name:    "medium",
+				size:    templintegration.Medium,
+				classes: []string{},
+				want:    goldenButton(base, medium),
+			},
+			{
+				name:    "large",
+				size:    templintegration.Large,
+				classes: []string{},
+				want:    goldenButton(base, large),
+			},
+			{
+				name:    "small+bg",
+				size:    templintegration.Small,
+				classes: []string{bg},
+				want:    goldenButton(base, small, bg),
+			},
+			{
+				name:    "medium+bg",
+				size:    templintegration.Medium,
+				classes: []string{bg},
+				want:    goldenButton(base, medium, bg),
+			},
+			{
+				name:    "large+bg",
+				size:    templintegration.Large,
+				classes: []string{bg},
+				want:    goldenButton(base, large, bg),
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				buf := new(bytes.Buffer)
+				props := templintegration.ButtonProps{
+					Classes: test.classes,
+					Size:    test.size,
+				}
+				templintegration.Button(props).Render(context.Background(), buf)
+				got := buf.String()
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
 	t.Run("twmergejoiner", func(t *testing.T) {
-		// Note: twmerge.Merge is deterministic across a single run, but NOT across
-		// multiple runs. We can't rely on the expected output to be static, so we
-		// need to call twmerge.Merge directly.
+		// Note: We need to call twmerge.Merge to generate the expected outputs at
+		// runtime. While it seems to be deterministic across a single program
+		// execution due to its internal cache, the output is not guaranteed across
+		// separate runs.
 
 		base := "inline-flex items-center justify-center py-1"
 		small := "h-9 px-3"
