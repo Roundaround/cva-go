@@ -239,6 +239,76 @@ func Inherit[P any, B any](base *Cva[B], props func(P) B) Option[P] {
 	}
 }
 
+// Memoize returns a memoized version of the given function.
+//
+// The memoized function will cache the result of the first call for each unique
+// input value. This is useful for expensive computations or when the same input
+// is likely to be used multiple times. Might be useful for prop getters or
+// transformers that for some reason are expensive to compute or involve copying
+// data.
+//
+// Most of the time you will not need this, especially if all your getter
+// functions simply return values.
+//
+// Example:
+//
+//	type Props struct {
+//		Size int
+//	}
+//
+//	type ExtendedProps struct {
+//		Size string
+//	}
+//
+//	var base = NewCva[Props](
+//		StaticClasses[Props]("button"),
+//		Variant(
+//			Memoize(func(p Props) string {
+//				// Call to some expensive transformation function
+//				return sizeString(p.Size)
+//			}),
+//			map[string]string{
+//				"small":  "button-small",
+//				"medium": "button-medium",
+//				"large":  "button-large",
+//			},
+//		),
+//	)
+//
+//	var extended = NewCva[ExtendedProps](
+//		Inherit(
+//			base,
+//			Memoize(func(p ExtendedProps) Props {
+//				return Props{
+//					// Call to some kind of expensive transformation function
+//					Size: transformSize(p.Size),
+//				}
+//			}),
+//		),
+//		Variant(
+//			func(p ExtendedProps) string { return p.Size },
+//			map[string]string{
+//				"xs":  "button-small",
+//				"md": "button-medium",
+//				"lg":  "button-large",
+//			},
+//		),
+//	)
+func Memoize[P comparable, R any](fn func(P) R) func(P) R {
+	var lastProps P
+	var lastResult R
+	var hasLast bool
+
+	return func(p P) R {
+		if !hasLast || lastProps != p {
+			lastProps = p
+			lastResult = fn(p)
+			hasLast = true
+		}
+		return lastResult
+	}
+}
+
 func defaultClassJoiner(parts []string) string {
 	return strings.Join(parts, " ")
 }

@@ -165,6 +165,61 @@ fmt.Println(button.ClassName(Props{"medium"}))
 // Output: inline-flex items-center justify-center h-10 px-4 py-2
 ```
 
+### Memoizing expensive property computations
+
+If for some reason your getter functions are actually computing values (and said
+computations are expensive), cva-go also exposes a simple memoization helper as
+cva.Memoize.
+
+__Most of the time you will not need this.__ Unless you run into performance
+issues in computation time or memory allocation, you can skip right over this.
+It is included as a convenience for more advanced use cases.
+
+```go
+type Props struct {
+	Size int
+}
+
+type ExtendedProps struct {
+	Size string
+}
+
+base := NewCva[Props](
+	StaticClasses[Props]("button"),
+	Variant(
+		Memoize(func(p Props) string {
+			// Call to some expensive transformation function
+			return sizeString(p.Size)
+		}),
+		map[string]string{
+			"small":  "button-small",
+			"medium": "button-medium",
+			"large":  "button-large",
+		},
+	),
+)
+
+extended := NewCva[ExtendedProps](
+	Inherit(
+		base,
+		Memoize(func(p ExtendedProps) Props {
+			return Props{
+				// Call to some expensive transformation function
+				Size: transformSize(p.Size),
+			}
+		}),
+	),
+	Variant(
+		func(p ExtendedProps) string { return p.Size },
+		map[string]string{
+			"xs":  "button-small",
+			"md": "button-medium",
+			"lg":  "button-large",
+		},
+	),
+)
+```
+
 ### Additional examples
 
 See the [examples directory](https://github.com/Roundaround/cva-go/tree/main/examples) for more usage examples
