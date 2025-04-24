@@ -1,6 +1,7 @@
 package cva
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -100,11 +101,12 @@ func Variant[P any, V comparable, M map[V]string | map[V][]string](
 	classesMap M,
 ) Option[P] {
 	return func(c *Cva[P]) {
-		var normalized map[V][]string
+		normalized := make(map[V][]string)
 		if mapOfSlices, ok := any(classesMap).(map[V][]string); ok {
-			normalized = mapOfSlices
+			for k, v := range mapOfSlices {
+				normalized[k] = slices.Clone(v)
+			}
 		} else {
-			normalized = make(map[V][]string)
 			for k, v := range any(classesMap).(map[V]string) {
 				normalized[k] = []string{v}
 			}

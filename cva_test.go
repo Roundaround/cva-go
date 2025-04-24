@@ -496,6 +496,118 @@ func TestCva(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("map_mutation", func(t *testing.T) {
+		t.Run("for_string_maps", func(t *testing.T) {
+			type Props struct {
+				Size string
+			}
+
+			// Create a map and pass it to Variant
+			classesMap := map[string]string{
+				"small":  "button-small",
+				"medium": "button-medium",
+			}
+
+			button := NewCva(
+				StaticClasses[Props]("button"),
+				Variant(
+					func(p Props) string { return p.Size },
+					classesMap,
+				),
+			)
+
+			// Mutate the original map after creating the Cva
+			classesMap["small"] = "mutated-small"
+			classesMap["large"] = "button-large"
+
+			tests := []struct {
+				name  string
+				props Props
+				want  string
+			}{
+				{
+					name:  "small",
+					props: Props{Size: "small"},
+					want:  "button button-small", // Should still use original value
+				},
+				{
+					name:  "medium",
+					props: Props{Size: "medium"},
+					want:  "button button-medium",
+				},
+				{
+					name:  "large",
+					props: Props{Size: "large"},
+					want:  "button", // Should not have the new large variant
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := button.ClassName(test.props)
+					if got != test.want {
+						t.Errorf("got %s, want %s", got, test.want)
+					}
+				})
+			}
+		})
+
+		t.Run("for_slice_maps", func(t *testing.T) {
+			type Props struct {
+				Size string
+			}
+
+			// Create a map and pass it to Variant
+			classesMap := map[string][]string{
+				"small":  {"button-small", "text-sm"},
+				"medium": {"button-medium", "text-base"},
+			}
+
+			button := NewCva(
+				StaticClasses[Props]("button"),
+				Variant(
+					func(p Props) string { return p.Size },
+					classesMap,
+				),
+			)
+
+			// Mutate the original map after creating the Cva
+			classesMap["small"] = []string{"mutated-small", "text-lg"}
+			classesMap["large"] = []string{"button-large", "text-xl"}
+
+			tests := []struct {
+				name  string
+				props Props
+				want  string
+			}{
+				{
+					name:  "small",
+					props: Props{Size: "small"},
+					want:  "button button-small text-sm", // Should still use original values
+				},
+				{
+					name:  "medium",
+					props: Props{Size: "medium"},
+					want:  "button button-medium text-base",
+				},
+				{
+					name:  "large",
+					props: Props{Size: "large"},
+					want:  "button", // Should not have the new large variant
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := button.ClassName(test.props)
+					if got != test.want {
+						t.Errorf("got %s, want %s", got, test.want)
+					}
+				})
+			}
+		})
+	})
 }
 
 func TestMemoize(t *testing.T) {
