@@ -615,3 +615,94 @@ func TestMemoize(t *testing.T) {
 		}
 	})
 }
+
+func TestDefaultClassJoiner(t *testing.T) {
+	tests := []struct {
+		name  string
+		parts []string
+		want  string
+	}{
+		{
+			name:  "empty",
+			parts: []string{},
+			want:  "",
+		},
+		{
+			name:  "single_part",
+			parts: []string{"button"},
+			want:  "button",
+		},
+		{
+			name:  "multiple_parts",
+			parts: []string{"button", "primary", "large"},
+			want:  "button primary large",
+		},
+		{
+			name:  "parts_with_spaces",
+			parts: []string{"button primary", "large"},
+			want:  "button primary large",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := defaultClassJoiner(test.parts)
+			if got != test.want {
+				t.Errorf("defaultClassJoiner(%v) = %q, want %q", test.parts, got, test.want)
+			}
+		})
+	}
+}
+
+func TestDedupingClassJoiner(t *testing.T) {
+	tests := []struct {
+		name  string
+		parts []string
+		want  string
+	}{
+		{
+			name:  "empty",
+			parts: []string{},
+			want:  "",
+		},
+		{
+			name:  "single_part",
+			parts: []string{"button"},
+			want:  "button",
+		},
+		{
+			name:  "multiple_parts_no_duplicates",
+			parts: []string{"button", "primary", "large"},
+			want:  "button primary large",
+		},
+		{
+			name:  "parts_with_duplicates",
+			parts: []string{"button", "primary", "button", "large"},
+			want:  "button primary large",
+		},
+		{
+			name:  "parts_with_spaces_and_duplicates",
+			parts: []string{"button primary", "large", "button", "primary large"},
+			want:  "button primary large",
+		},
+		{
+			name:  "parts_with_multiple_duplicates",
+			parts: []string{"button", "primary", "button", "large", "primary", "button"},
+			want:  "button primary large",
+		},
+		{
+			name:  "parts_with_empty_strings",
+			parts: []string{"button", "", "primary", " ", "large"},
+			want:  "button primary large",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := dedupingClassJoiner(test.parts)
+			if got != test.want {
+				t.Errorf("dedupingClassJoiner(%v) = %q, want %q", test.parts, got, test.want)
+			}
+		})
+	}
+}

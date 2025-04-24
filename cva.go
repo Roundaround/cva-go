@@ -317,7 +317,10 @@ func dedupingClassJoiner(parts []string) string {
 	split := make([]string, 0, len(parts))
 	for _, part := range parts {
 		for s := range strings.SplitSeq(part, " ") {
-			split = append(split, s)
+			s = strings.TrimSpace(s)
+			if s != "" {
+				split = append(split, s)
+			}
 		}
 	}
 
