@@ -10,6 +10,7 @@ import (
 	twmerge "github.com/Oudwins/tailwind-merge-go"
 	"github.com/Roundaround/cva-go/examples/compoundvariants"
 	"github.com/Roundaround/cva-go/examples/dedupingjoiner"
+	"github.com/Roundaround/cva-go/examples/inheritance"
 	"github.com/Roundaround/cva-go/examples/predicatevariants"
 	"github.com/Roundaround/cva-go/examples/simplecase"
 	"github.com/Roundaround/cva-go/examples/staticclasses"
@@ -389,5 +390,124 @@ func TestExamples(t *testing.T) {
 				}
 			})
 		}
+	})
+
+	t.Run("inheritance", func(t *testing.T) {
+		base := "inline-flex items-center justify-center"
+		small := "h-8 px-3"
+		medium := "h-10 px-4"
+		large := "h-12 px-6"
+		primary := "bg-blue-500 text-white"
+		secondary := "bg-gray-200 text-gray-800"
+		outline := "border border-gray-300 text-gray-800"
+		loading := "opacity-50 cursor-not-allowed"
+		plusIcon := "rounded-full [&_svg]:size-4"
+		settingsIcon := "rounded-full [&_svg]:size-5"
+		closeIcon := "rounded-full [&_svg]:size-6"
+
+		// Base button tests
+		t.Run("base-button", func(t *testing.T) {
+			tests := []struct {
+				name  string
+				props inheritance.BaseButtonProps
+				want  []string
+			}{
+				{
+					name:  "small-primary",
+					props: inheritance.BaseButtonProps{Size: "small", Style: "primary"},
+					want:  []string{base, small, primary},
+				},
+				{
+					name:  "medium-secondary",
+					props: inheritance.BaseButtonProps{Size: "medium", Style: "secondary"},
+					want:  []string{base, medium, secondary},
+				},
+				{
+					name:  "large-outline",
+					props: inheritance.BaseButtonProps{Size: "large", Style: "outline"},
+					want:  []string{base, large, outline},
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := inheritance.BaseButton.ClassName(test.props)
+					want := strings.Join(test.want, " ")
+					if got != want {
+						t.Errorf("got %s, want %s", got, want)
+					}
+				})
+			}
+		})
+
+		// Loading button tests
+		t.Run("loading-button", func(t *testing.T) {
+			tests := []struct {
+				name  string
+				props inheritance.LoadingButtonProps
+				want  []string
+			}{
+				{
+					name:  "small-primary",
+					props: inheritance.LoadingButtonProps{Size: "small", Style: "primary", Loading: false},
+					want:  []string{base, small, primary},
+				},
+				{
+					name:  "medium-secondary-loading",
+					props: inheritance.LoadingButtonProps{Size: "medium", Style: "secondary", Loading: true},
+					want:  []string{base, medium, secondary, loading},
+				},
+				{
+					name:  "large-outline-loading",
+					props: inheritance.LoadingButtonProps{Size: "large", Style: "outline", Loading: true},
+					want:  []string{base, large, outline, loading},
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := inheritance.LoadingButton.ClassName(test.props)
+					want := strings.Join(test.want, " ")
+					if got != want {
+						t.Errorf("got %s, want %s", got, want)
+					}
+				})
+			}
+		})
+
+		// Icon button tests
+		t.Run("icon-button", func(t *testing.T) {
+			tests := []struct {
+				name  string
+				props inheritance.IconButtonProps
+				want  []string
+			}{
+				{
+					name:  "small-primary-plus",
+					props: inheritance.IconButtonProps{Size: "small", Style: "primary", Icon: "plus"},
+					want:  []string{base, small, primary, plusIcon},
+				},
+				{
+					name:  "medium-secondary-settings",
+					props: inheritance.IconButtonProps{Size: "medium", Style: "secondary", Icon: "settings"},
+					want:  []string{base, medium, secondary, settingsIcon},
+				},
+				{
+					name:  "large-outline-close",
+					props: inheritance.IconButtonProps{Size: "large", Style: "outline", Icon: "close"},
+					want:  []string{base, large, outline, closeIcon},
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := inheritance.IconButton.ClassName(test.props)
+					want := strings.Join(test.want, " ")
+					if got != want {
+						t.Errorf("got %s, want %s", got, want)
+					}
+				})
+			}
+		})
 	})
 }

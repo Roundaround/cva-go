@@ -181,6 +181,64 @@ func PropsClasses[P any](
 	}
 }
 
+// Inherit creates a new Cva that inherits all classes and variants from another Cva.
+//
+// The base argument is the Cva instance to inherit from. The props argument is
+// a function that maps the new props type to the base props type, so that it
+// can be passed to all the base Cva's producers.
+//
+// Example:
+//
+//	type BaseProps struct {
+//		Size string
+//	}
+//
+//	type ExtendedProps struct {
+//		Size  string
+//		Color string
+//	}
+//
+//	base := NewCva[BaseProps](
+//		StaticClasses[BaseProps]("button"),
+//		Variant(
+//			func(p BaseProps) string { return p.Size },
+//			map[string]string{
+//				"small":  "button-small",
+//				"medium": "button-medium",
+//				"large":  "button-large",
+//			},
+//		),
+//	)
+//
+//	extended := NewCva[ExtendedProps](
+//		Inherit[ExtendedProps, BaseProps](
+//			base,
+//			func(p ExtendedProps) BaseProps { return BaseProps{Size: p.Size} },
+//		),
+//		Variant(
+//			func(p ExtendedProps) string { return p.Color },
+//			map[string]string{
+//				"red":   "button-red",
+//				"blue":  "button-blue",
+//				"green": "button-green",
+//			},
+//		),
+//	)
+func Inherit[P any, B any](base *Cva[B], props func(P) B) Option[P] {
+	return func(c *Cva[P]) {
+		for _, producer := range base.producers {
+			c.producers = append(c.producers, mappedProducer[P, B]{
+				base:    producer,
+				propsFn: props,
+			})
+		}
+
+		if base.ctx != nil {
+			c.ctx = base.ctx
+		}
+	}
+}
+
 func defaultClassJoiner(parts []string) string {
 	return strings.Join(parts, " ")
 }
@@ -258,4 +316,13 @@ type staticClassList[P any] struct {
 
 func (v staticClassList[P]) apply(p P) []string {
 	return v.getter(p)
+}
+
+type mappedProducer[P any, B any] struct {
+	base    classProducer[B]
+	propsFn func(P) B
+}
+
+func (p mappedProducer[P, B]) apply(props P) []string {
+	return p.base.apply(p.propsFn(props))
 }

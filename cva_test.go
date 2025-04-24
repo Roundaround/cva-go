@@ -352,4 +352,147 @@ func TestCva(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("inherit", func(t *testing.T) {
+		t.Run("prop_mapping", func(t *testing.T) {
+			type BaseProps struct {
+				Size string
+			}
+
+			type ExtendedProps struct {
+				Size  int
+				Color string
+			}
+
+			sizes := []string{"small", "medium", "large"}
+
+			base := NewCva(
+				StaticClasses[BaseProps]("button"),
+				Variant(
+					func(p BaseProps) string { return p.Size },
+					map[string]string{
+						"small":  "button-small",
+						"medium": "button-medium",
+						"large":  "button-large",
+					},
+				),
+			)
+
+			extended := NewCva(
+				Inherit(
+					base,
+					func(p ExtendedProps) BaseProps { return BaseProps{Size: sizes[p.Size]} },
+				),
+				Variant(
+					func(p ExtendedProps) string { return p.Color },
+					map[string]string{
+						"red":   "button-red",
+						"blue":  "button-blue",
+						"green": "button-green",
+					},
+				),
+			)
+
+			tests := []struct {
+				name  string
+				props ExtendedProps
+				want  string
+			}{
+				{
+					name:  "small-red",
+					props: ExtendedProps{Size: 0, Color: "red"},
+					want:  "button button-small button-red",
+				},
+				{
+					name:  "medium-blue",
+					props: ExtendedProps{Size: 1, Color: "blue"},
+					want:  "button button-medium button-blue",
+				},
+				{
+					name:  "large-green",
+					props: ExtendedProps{Size: 2, Color: "green"},
+					want:  "button button-large button-green",
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := extended.ClassName(test.props)
+					if got != test.want {
+						t.Errorf("got %s, want %s", got, test.want)
+					}
+				})
+			}
+		})
+
+		t.Run("context_inheritance", func(t *testing.T) {
+			type BaseProps struct {
+				Size string
+			}
+
+			type ExtendedProps struct {
+				Size string
+			}
+
+			ctx := NewCvaContext().WithClassJoiner(func(parts []string) string {
+				return strings.Join(parts, "::")
+			})
+
+			base := NewCva(
+				Context[BaseProps](ctx),
+				StaticClasses[BaseProps]("button"),
+				Variant(
+					func(p BaseProps) string { return p.Size },
+					map[string]string{
+						"small":  "button-small",
+						"medium": "button-medium",
+						"large":  "button-large",
+					},
+				),
+			)
+
+			extended := NewCva(
+				Inherit(base, func(p ExtendedProps) BaseProps { return BaseProps(p) }),
+				Variant(
+					func(p ExtendedProps) string { return p.Size },
+					map[string]string{
+						"small":  "extended-small",
+						"medium": "extended-medium",
+						"large":  "extended-large",
+					},
+				),
+			)
+
+			tests := []struct {
+				name  string
+				props ExtendedProps
+				want  string
+			}{
+				{
+					name:  "small",
+					props: ExtendedProps{Size: "small"},
+					want:  "button::button-small::extended-small",
+				},
+				{
+					name:  "medium",
+					props: ExtendedProps{Size: "medium"},
+					want:  "button::button-medium::extended-medium",
+				},
+				{
+					name:  "large",
+					props: ExtendedProps{Size: "large"},
+					want:  "button::button-large::extended-large",
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := extended.ClassName(test.props)
+					if got != test.want {
+						t.Errorf("got %s, want %s", got, test.want)
+					}
+				})
+			}
+		})
+	})
 }
