@@ -9,7 +9,7 @@ import (
 // New creates a new Cva instance.
 //
 // The opts argument is a list of options to configure the Cva. See
-// Context, StaticClasses, and Variant for some examples.
+// Base, Variant, and CompoundVariant for some examples.
 func New[P any](opts ...Option[P]) *Cva[P] {
 	c := &Cva[P]{}
 	for _, opt := range opts {
