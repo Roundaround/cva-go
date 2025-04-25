@@ -27,15 +27,15 @@ type Props struct {
 }
 
 button := cva.New(
-  cva.Base[Props]("inline-flex items-center justify-center"),
-  cva.Variant(
-    func(p Props) string { return p.Size },
-    map[string][]string{
-      "small":  {"h-9 px-3"},
-      "medium": {"h-10 px-4 py-2"},
-      "large":  {"h-11 px-8 py-3"},
-    },
-  ),
+	cva.Base[Props]("inline-flex items-center justify-center"),
+	cva.Variant(
+		func(p Props) string { return p.Size },
+		map[string][]string{
+			"small":  {"h-9 px-3"},
+			"medium": {"h-10 px-4 py-2"},
+			"large":  {"h-11 px-8 py-3"},
+		},
+	),
 )
 
 fmt.Println(button.Classes(Props{"small"}))
@@ -54,7 +54,7 @@ type Props struct {
 }
 
 button := cva.New(
-  cva.Base[Props]("inline-flex items-center justify-center"),
+	cva.Base[Props]("inline-flex items-center justify-center"),
 	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
@@ -109,8 +109,8 @@ button := cva.NewCva(
 )
 
 fmt.Println(button.Classes(Props{
-  Loading:  true,
-  Disabled: false,
+	Loading:  true,
+	Disabled: false,
 }))
 // Output: button button-loading button-disabled
 ```
@@ -147,15 +147,15 @@ fmt.Println(cva.DedupeClasses(button.Classes(Props{"small"})))
 import twmerge "github.com/Oudwins/tailwind-merge-go"
 
 button := cva.New(
-  cva.Base[Props]("inline-flex items-center justify-center px-2 py-1"),
-  cva.Variant(
-    func(p Props) string { return p.size },
-    map[string][]string{
-      "small":  {"h-9 px-3"},
-      "medium": {"h-10 px-4 py-2"},
-      "large":  {"h-11 px-8 py-3"},
-    },
-  ),
+	cva.Base[Props]("inline-flex items-center justify-center px-2 py-1"),
+	cva.Variant(
+		func(p Props) string { return p.size },
+		map[string][]string{
+			"small":  {"h-9 px-3"},
+			"medium": {"h-10 px-4 py-2"},
+			"large":  {"h-11 px-8 py-3"},
+		},
+	),
 )
 
 fmt.Println(twmerge.Merge(button.Classes(Props{"medium"})))
@@ -170,15 +170,15 @@ reference to the `Classes` function rather than the component struct itself.
 
 ```go
 button := cva.New(
-  cva.Base[Props]("inline-flex items-center justify-center"),
-  cva.Variant(
-    func(p Props) string { return p.size },
-    map[string][]string{
-      "small":  {"h-9 px-3"},
-      "medium": {"h-10 px-4 py-2"},
-      "large":  {"h-11 px-8 py-3"},
-    },
-  ),
+	cva.Base[Props]("inline-flex items-center justify-center"),
+	cva.Variant(
+		func(p Props) string { return p.size },
+		map[string][]string{
+			"small":  {"h-9 px-3"},
+			"medium": {"h-10 px-4 py-2"},
+			"large":  {"h-11 px-8 py-3"},
+		},
+	),
 ).Classes // Storing a reference to the Classes func
 
 fmt.Println(button(Props{"medium"}))
@@ -217,7 +217,7 @@ button := cva.New(
 )
 
 type LoadingButtonProps struct {
-  ButtonProps
+	ButtonProps
 	Loading bool
 }
 
@@ -233,8 +233,8 @@ loadingButton := cva.New(
 )
 
 fmt.Println(loadingButton.Classes({
-  ButtonProps{Size: "medium", Style: "primary"},
-  Loading: true,
+	ButtonProps{Size: "medium", Style: "primary"},
+	Loading: true,
 }))
 // Output: inline-flex items-center justify-center h-10 px-4 bg-blue-500
 //   text-white opacity-50 cursor-not-allowed
