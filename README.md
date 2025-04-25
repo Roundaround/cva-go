@@ -309,13 +309,13 @@ settings.json:
 
 ```json
 {
-  "tailwindCSS.includeLanguages": {
-    "templ": "html",
-    "go": "javascript"
-  },
-  "tailwindCSS.classFunctions": [
-    "cva.New"
-  ],
+	"tailwindCSS.includeLanguages": {
+		"templ": "html",
+		"go": "javascript"
+	},
+	"tailwindCSS.classFunctions": [
+		"cva.New"
+	],
 }
 ```
 
