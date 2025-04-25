@@ -4,12 +4,11 @@
 
 _(but for Go!)_
 
-cva-go has no direct affiliation with the original cva project, but is largely
-inspired by it's design. Head on over to
-[cva's documentation](https://cva.style/) if you need an overview of the project
-and what problems it is trying to solve. cva-go is a rough re-implementation of
-the high-level concept for the Go programming language, and pairs beautifully
-with [templ](https://templ.guide/), [TailwindCSS](https://tailwindcss.com/), and
+cva-go has no direct affiliation with the original cva project, but is largely inspired by it's
+design. Head on over to [cva's documentation](https://cva.style/) if you need an overview of the
+project and what problems it is trying to solve. cva-go is a rough re-implementation of the
+high-level concept for the Go programming language, and pairs beautifully with
+[templ](https://templ.guide/), [TailwindCSS](https://tailwindcss.com/), and
 [tailwind-merge-go](https://github.com/Oudwins/tailwind-merge-go).
 
 ## Getting started
@@ -27,8 +26,8 @@ type Props struct {
 	Size  string
 }
 
-button := cva.NewCva(
-  cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+button := cva.New(
+  cva.Base[Props]("inline-flex items-center justify-center"),
   cva.Variant(
     func(p Props) string { return p.Size },
     map[string][]string{
@@ -39,14 +38,14 @@ button := cva.NewCva(
   ),
 )
 
-fmt.Println(button.ClassName(Props{"small"}))
+fmt.Println(button.Classes(Props{"small"}))
 // Output: inline-flex items-center justify-center h-9 px-3
 ```
 
 ### Compound variants
 
-The `CompoundVariant` helper allows you to apply classes based on a pair of
-values. For more than two values, check out [predicate variants](#predicate-variants)
+The `CompoundVariant` helper allows you to apply classes based on a pair of values. For more than
+two values, check out [predicate variants](#predicate-variants)
 
 ```go
 type Props struct {
@@ -54,8 +53,8 @@ type Props struct {
 	Style string
 }
 
-button := cva.NewCva(
-  cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+button := cva.New(
+  cva.Base[Props]("inline-flex items-center justify-center"),
 	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
@@ -80,17 +79,16 @@ button := cva.NewCva(
 	),
 )
 
-fmt.Println(button.ClassName(Props{"small", "icon"}))
+fmt.Println(button.Classes(Props{"small", "icon"}))
 // Output: inline-flex items-center justify-center h-8 bg-gray-100 rounded-full
 //   aspect-square [&_svg]:size-4
 ```
 
 ### Predicate variants
 
-The `PredicateVariant` helper lets you specify a predicate function for each
-class list you want to apply. When working with non-string-map values (i.e.
-bools) or more than two variant properties, predicate variants can give you more
-advanced control over when classes are applied.
+The `PredicateVariant` helper lets you specify a predicate function for each class list you want to
+apply. When working with non-string-map values (i.e. bools) or more than two variant properties,
+predicate variants can give you more advanced control over when classes are applied.
 
 ```go
 type Props struct {
@@ -99,7 +97,7 @@ type Props struct {
 }
 
 button := cva.NewCva(
-	cva.StaticClasses[Props]("button"),
+	cva.Base[Props]("button"),
 	cva.PredicateVariant(
 		func(p Props) bool { return p.Loading },
 		"button-loading",
@@ -110,32 +108,36 @@ button := cva.NewCva(
 	),
 )
 
-fmt.Println(button.ClassName(Props{
+fmt.Println(button.Classes(Props{
   Loading:  true,
   Disabled: false,
 }))
 // Output: button button-loading button-disabled
 ```
 
-### Customizing the class joining behavior
+### Deduplicating classes
+
+Out of the box, cva-go will not deduplicate classes for you directly as part of your component
+definitions. It does however expose a helper function for deduping classes as a post-processing
+step, should you need it.
 
 ```go
-dedupingContext := cva.NewCvaContext().WithDedupingClassJoiner()
-
-button := cva.NewCva(
-  cva.Context[Props](dedupingContext),
-	cva.StaticClasses[Props]("inline-flex items-center justify-center rounded-md"),
+button := cva.New(
+	cva.Base[Props]("inline-flex items-center justify-center rounded-md"),
 	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
-			"small":  "h-8 rounded-md",
+			"small":  "h-8 rounded-md", // rounded-md is repeated from the base
 			"medium": "h-10 rounded-md",
 			"large":  "h-12 rounded-md",
 		},
 	),
 )
 
-fmt.Println(button.ClassName(Props{"small"}))
+fmt.Println(button.Classes(Props{"small"}))
+// Output: inline-flex items-center justify-center rounded-md h-8 rounded-md
+
+fmt.Println(cva.DedupeClasses(button.Classes(Props{"small"})))
 // Output: inline-flex items-center justify-center rounded-md h-8
 ```
 
@@ -144,13 +146,8 @@ fmt.Println(button.ClassName(Props{"small"}))
 ```go
 import twmerge "github.com/Oudwins/tailwind-merge-go"
 
-ctx := cva.NewCvaContext().WithClassJoiner(func(parts []string) string {
-  return twmerge.Merge(parts...)
-})
-
-button := cva.NewCva(
-  cva.Context[Props](ctx),
-  cva.StaticClasses[Props]("inline-flex items-center justify-center px-2 py-1"),
+button := cva.New(
+  cva.Base[Props]("inline-flex items-center justify-center px-2 py-1"),
   cva.Variant(
     func(p Props) string { return p.size },
     map[string][]string{
@@ -161,15 +158,37 @@ button := cva.NewCva(
   ),
 )
 
-fmt.Println(button.ClassName(Props{"medium"}))
+fmt.Println(twmerge.Merge(button.Classes(Props{"medium"})))
+// Output: inline-flex items-center justify-center h-10 px-4 py-2
+```
+
+### Simplifying your component usage
+
+If you find that obtaining the list of classes at the call site is too noisy or verbose (which can
+easily be the case when integrating with templating systems like templ), you may wish to store a
+reference to the `Classes` function rather than the component struct itself.
+
+```go
+button := cva.New(
+  cva.Base[Props]("inline-flex items-center justify-center"),
+  cva.Variant(
+    func(p Props) string { return p.size },
+    map[string][]string{
+      "small":  {"h-9 px-3"},
+      "medium": {"h-10 px-4 py-2"},
+      "large":  {"h-11 px-8 py-3"},
+    },
+  ),
+).Classes // Storing a reference to the Classes func
+
+fmt.Println(button(Props{"medium"}))
 // Output: inline-flex items-center justify-center h-10 px-4 py-2
 ```
 
 ### Composition through inheritance
 
-You can compose components through inheritance by using the `Inherit` option.
-This will copy all the class lists and variants from the base Cva, allowing you
-to build upon it.
+You can compose components through inheritance by using the `Inherit` option. This will copy all the
+class lists and variants from the base Cva, allowing you to build upon it.
 
 ```go
 type ButtonProps struct {
@@ -177,8 +196,8 @@ type ButtonProps struct {
 	Style string
 }
 
-button := cva.NewCva(
-	cva.StaticClasses[ButtonProps]("inline-flex items-center justify-center"),
+button := cva.New(
+	cva.Base[ButtonProps]("inline-flex items-center justify-center"),
 	cva.Variant(
 		func(p ButtonProps) string { return p.Size },
 		map[string]string{
@@ -202,7 +221,7 @@ type LoadingButtonProps struct {
 	Loading bool
 }
 
-loadingButton := cva.NewCva(
+loadingButton := cva.New(
 	cva.Inherit(
 		button,
 		func(p LoadingButtonProps) ButtonProps { return p.ButtonProps },
@@ -213,22 +232,22 @@ loadingButton := cva.NewCva(
 	),
 )
 
-fmt.Println(loadingButton.ClassName({
+fmt.Println(loadingButton.Classes({
   ButtonProps{Size: "medium", Style: "primary"},
   Loading: true,
 }))
-// Output: inline-flex items-center justify-center h-10 px-4 bg-blue-500 text-white opacity-50 cursor-not-allowed
+// Output: inline-flex items-center justify-center h-10 px-4 bg-blue-500
+//   text-white opacity-50 cursor-not-allowed
 ```
 
 ### Memoizing expensive property computations
 
-If for some reason your getter functions are actually computing values (and said
-computations are expensive), cva-go also exposes a simple memoization helper as
-cva.Memoize.
+If for some reason your getter functions are actually computing values (and said computations are
+expensive), cva-go also exposes a simple memoization helper as cva.Memoize.
 
-__Most of the time you will not need this.__ Unless you run into performance
-issues in computation time or memory allocation, you can skip right over this.
-It is included as a convenience for more advanced use cases.
+__Most of the time you will not need this.__ Unless you run into performance issues in computation
+time or memory allocation, you can skip right over this. It is included as a convenience for more
+advanced use cases.
 
 ```go
 type Props struct {
@@ -239,8 +258,8 @@ type ExtendedProps struct {
 	Size string
 }
 
-base := cva.NewCva[Props](
-	cva.StaticClasses[Props]("button"),
+base := cva.New[Props](
+	cva.Base[Props]("button"),
 	cva.Variant(
 		cva.Memoize(func(p Props) string {
 			// Call to some expensive transformation function
@@ -254,7 +273,7 @@ base := cva.NewCva[Props](
 	),
 )
 
-extended := cva.NewCva[ExtendedProps](
+extended := cva.New[ExtendedProps](
 	cva.Inherit(
 		base,
 		cva.Memoize(func(p ExtendedProps) Props {
@@ -277,53 +296,35 @@ extended := cva.NewCva[ExtendedProps](
 
 ### Additional examples
 
-See the [examples directory](https://github.com/Roundaround/cva-go/tree/main/examples) for more usage examples
+See the [examples directory](https://github.com/Roundaround/cva-go/tree/main/examples) for more
+usage examples
 
 ### TailwindCSS VSCode extension integration
 
-Because the TailwindCSS VSCode extension uses regular expressions to target
-which content should be evaluated as Tailwind classes, there's no single
-solution to integrating cva-go with the extension.
-
-That being said, with a simple local function, you can create something easy to
-target with regular expressions:
-
-```go
-// Wrap your class list strings in a tw() call to get Tailwind intellisense
-func tw(parts ...string) []string {
-  return parts
-}
-
-var Button = cva.NewCva(
-	cva.StaticClasses[Props](tw("inline-flex items-center justify-center")),
-	cva.Variant(
-		func(p Props) Size { return p.size },
-		map[Size][]string{
-			Small:  tw("h-9 px-3"),
-			Medium: tw("h-10 px-4 py-2"),
-			Large:  tw("h-11 px-8"),
-		},
-	),
-)
-```
-
-Then in your VSCode's settings.json, add or extend the `tailwindCSS.experimental.classRegex` property with the following regular expression, which simply matches any string inside a tw() function call:
+If you're working with VSCode and TailwindCSS, you can get incredible intellisense/language server
+support for your Tailwind classes, including autocomplete, tooltips, and color indicators using the
+[Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
+extension. To integrate it with your Go project, add/extend the following entries to your VSCode
+settings.json:
 
 ```json
 {
-  "tailwindCSS.experimental.classRegex": [
-    ["tw\\((?:\"([^\"]*)\")|(?:`([^`]*)`)\\)"]
-  ]
+  "tailwindCSS.includeLanguages": {
+    "templ": "html",
+    "go": "javascript"
+  },
+  "tailwindCSS.classFunctions": [
+    "cva.New"
+  ],
 }
 ```
 
 ## Attributions, license, and copyright
 
-Unless otherwise stated, cva-go is licensed under the MIT license. It is largely
-inspired by the popular npm package
-[class-variance-authority](https://cva.style/), but has no direct affiliation.
+Unless otherwise stated, cva-go is licensed under the MIT license. It is largely inspired by the
+popular npm package [class-variance-authority](https://cva.style/), but has no direct affiliation.
 
-The Go programming language and the Go logo are trademarks of Google. The cva-go
-project has no affiliation with the Go programming language or Google.
+The Go programming language and the Go logo are trademarks of Google. The cva-go project has no
+affiliation with the Go programming language or Google.
 
 Copyright (c) 2025 Evan Steinkerchner
