@@ -1,4 +1,4 @@
-package simplecase
+package additionalclasses
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 )
 
 type Props struct {
-	Size string
+	Size    string
+	Classes []string // Additional classes i.e. from parent components
 }
 
 var Button = cva.New(
@@ -20,9 +21,10 @@ var Button = cva.New(
 			"large":  "h-11 px-8 py-3",
 		},
 	),
+	cva.Classes(func(p Props) []string { return p.Classes }),
 )
 
 func Example() {
-	fmt.Println(Button.Classes(Props{"small"}))
-	// Output: inline-flex items-center justify-center h-9 px-3
+	fmt.Println(Button.Classes(Props{"small", []string{"bg-red-500"}}))
+	// Output: inline-flex items-center justify-center h-9 px-3 bg-red-500
 }

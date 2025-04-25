@@ -1,50 +1,16 @@
 package cva
 
 import (
+	"regexp"
 	"slices"
 	"strings"
 )
 
-// CvaContext holds configuration for Cva instances.
-type CvaContext struct {
-	classJoiner func(parts []string) string
-}
-
-// NewCvaContext creates a new CvaContext with default configuration.
-func NewCvaContext() *CvaContext {
-	return &CvaContext{
-		classJoiner: defaultClassJoiner,
-	}
-}
-
-// WithClassJoiner returns a new CvaContext with the specified class joiner.
-func (ctx *CvaContext) WithClassJoiner(joiner func(parts []string) string) *CvaContext {
-	return &CvaContext{
-		classJoiner: joiner,
-	}
-}
-
-// WithDefaultClassJoiner returns a new CvaContext with the default class joiner.
-//
-// The default class joiner concatenates parts with a space using strings.Join.
-func (ctx *CvaContext) WithDefaultClassJoiner() *CvaContext {
-	return ctx.WithClassJoiner(defaultClassJoiner)
-}
-
-// WithDedupingClassJoiner returns a new CvaContext with the deduping class joiner.
-//
-// The deduping class joiner splits parts by spaces, deduplicates them, and
-// concatenates them with a space using strings.Join, preserving the order of
-// the first occurrence of each class.
-func (ctx *CvaContext) WithDedupingClassJoiner() *CvaContext {
-	return ctx.WithClassJoiner(dedupingClassJoiner)
-}
-
-// NewCva creates a new Cva instance.
+// New creates a new Cva instance.
 //
 // The opts argument is a list of options to configure the Cva. See
 // Context, StaticClasses, and Variant for some examples.
-func NewCva[P any](opts ...Option[P]) *Cva[P] {
+func New[P any](opts ...Option[P]) *Cva[P] {
 	c := &Cva[P]{}
 	for _, opt := range opts {
 		opt(c)
@@ -57,35 +23,30 @@ func NewCva[P any](opts ...Option[P]) *Cva[P] {
 // The P type parameter is the type of the component's props.
 type Cva[P any] struct {
 	producers []classProducer[P]
-	ctx       *CvaContext
 }
 
-// ClassName generates the class list for the component based on the props.
-func (c *Cva[P]) ClassName(props P) string {
+// Classes generates the class list for the component based on the props.
+func (c *Cva[P]) Classes(props P) string {
 	parts := make([]string, 0)
 	for _, producer := range c.producers {
 		parts = append(parts, producer.apply(props)...)
 	}
-	joiner := defaultClassJoiner
-	if c.ctx != nil && c.ctx.classJoiner != nil {
-		joiner = c.ctx.classJoiner
-	}
-	return joiner(parts)
+	return joinClasses(parts...)
 }
 
 // Option is a function that configures a Cva instance.
 type Option[P any] func(*Cva[P])
 
-// Context sets the context for the Cva instance.
-func Context[P any](ctx *CvaContext) Option[P] {
-	return func(c *Cva[P]) {
-		c.ctx = ctx
-	}
+// Base defines a static class list for the component to be applied regardless
+// of the component's props. Alias for Static, and included for consistency with
+// the original cva API.
+func Base[P any](classes ...string) Option[P] {
+	return Static[P](classes...)
 }
 
-// StaticClasses defines a static class list for the component to be applied
-// regardless of the component's props.
-func StaticClasses[P any](classes ...string) Option[P] {
+// Static defines a static class list for the component to be applied regardless
+// of the component's props.
+func Static[P any](classes ...string) Option[P] {
 	return func(c *Cva[P]) {
 		c.producers = append(c.producers, staticClassList[P]{func(P) []string { return classes }})
 	}
@@ -173,8 +134,8 @@ func PredicateVariant[P any](
 	}
 }
 
-// PropsClasses applies all the classes returned from the supplied getter function.
-func PropsClasses[P any](
+// Classes applies all the classes returned from the supplied getter function.
+func Classes[P any](
 	getter func(P) []string,
 ) Option[P] {
 	return func(c *Cva[P]) {
@@ -200,9 +161,9 @@ func PropsClasses[P any](
 //		Color string
 //	}
 //
-//	base := NewCva[BaseProps](
-//		StaticClasses[BaseProps]("button"),
-//		Variant(
+//	base := cva.New[BaseProps](
+//		cva.Base[BaseProps]("button"),
+//		cva.Variant(
 //			func(p BaseProps) string { return p.Size },
 //			map[string]string{
 //				"small":  "button-small",
@@ -212,12 +173,12 @@ func PropsClasses[P any](
 //		),
 //	)
 //
-//	extended := NewCva[ExtendedProps](
-//		Inherit[ExtendedProps, BaseProps](
+//	extended := cva.New[ExtendedProps](
+//		cva.Inherit[ExtendedProps, BaseProps](
 //			base,
 //			func(p ExtendedProps) BaseProps { return BaseProps{Size: p.Size} },
 //		),
-//		Variant(
+//		cva.Variant(
 //			func(p ExtendedProps) string { return p.Color },
 //			map[string]string{
 //				"red":   "button-red",
@@ -233,10 +194,6 @@ func Inherit[P any, B any](base *Cva[B], props func(P) B) Option[P] {
 				base:    producer,
 				propsFn: props,
 			})
-		}
-
-		if base.ctx != nil {
-			c.ctx = base.ctx
 		}
 	}
 }
@@ -262,10 +219,10 @@ func Inherit[P any, B any](base *Cva[B], props func(P) B) Option[P] {
 //		Size string
 //	}
 //
-//	var base = NewCva[Props](
-//		StaticClasses[Props]("button"),
-//		Variant(
-//			Memoize(func(p Props) string {
+//	var base = cva.New[Props](
+//		cva.Base[Props]("button"),
+//		cva.Variant(
+//			cva.Memoize(func(p Props) string {
 //				// Call to some expensive transformation function
 //				return sizeString(p.Size)
 //			}),
@@ -277,17 +234,17 @@ func Inherit[P any, B any](base *Cva[B], props func(P) B) Option[P] {
 //		),
 //	)
 //
-//	var extended = NewCva[ExtendedProps](
-//		Inherit(
+//	var extended = cva.New[ExtendedProps](
+//		cva.Inherit(
 //			base,
-//			Memoize(func(p ExtendedProps) Props {
+//			cva.Memoize(func(p ExtendedProps) Props {
 //				return Props{
 //					// Call to some kind of expensive transformation function
 //					Size: transformSize(p.Size),
 //				}
 //			}),
 //		),
-//		Variant(
+//		cva.Variant(
 //			func(p ExtendedProps) string { return p.Size },
 //			map[string]string{
 //				"xs":  "button-small",
@@ -311,13 +268,14 @@ func Memoize[P comparable, R any](fn func(P) R) func(P) R {
 	}
 }
 
-func defaultClassJoiner(parts []string) string {
-	return strings.Join(parts, " ")
-}
-
-func dedupingClassJoiner(parts []string) string {
-	split := make([]string, 0, len(parts))
-	for _, part := range parts {
+// DedupeClasses deduplicates classes from the given list and joins them all
+// back together with spaces.
+//
+// Provided as a convience for those who are not combining cva-go with
+// TailwindCSS & github.com/Oudwins/tailwind-merge-go.
+func DedupeClasses(classes ...string) string {
+	split := make([]string, 0, len(classes))
+	for _, part := range classes {
 		for s := range strings.SplitSeq(part, " ") {
 			s = strings.TrimSpace(s)
 			if s != "" {
@@ -335,7 +293,11 @@ func dedupingClassJoiner(parts []string) string {
 		}
 	}
 
-	return strings.Join(deduped, " ")
+	return joinClasses(deduped...)
+}
+
+func joinClasses(classes ...string) string {
+	return whitespaceRe.ReplaceAllString(strings.TrimSpace(strings.Join(classes, " ")), " ")
 }
 
 type classProducer[P any] interface {
@@ -401,3 +363,5 @@ type mappedProducer[P any, B any] struct {
 func (p mappedProducer[P, B]) apply(props P) []string {
 	return p.base.apply(p.propsFn(props))
 }
+
+var whitespaceRe = regexp.MustCompile(`\s+`)

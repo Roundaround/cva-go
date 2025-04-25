@@ -12,5 +12,5 @@ func Example() {
 	}
 
 	Button(props).Render(context.Background(), os.Stdout)
-	// Output: <button class="inline-flex items-center ..."></button>
+	// Output: <button class="inline-flex items-center ..."></button> (x2)
 }

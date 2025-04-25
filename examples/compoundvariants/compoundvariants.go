@@ -11,8 +11,8 @@ type Props struct {
 	Style string
 }
 
-var Button = cva.NewCva(
-	cva.StaticClasses[Props]("inline-flex items-center justify-center"),
+var Button = cva.New(
+	cva.Base[Props]("inline-flex items-center justify-center"),
 	cva.Variant(
 		func(p Props) string { return p.Size },
 		map[string]string{
@@ -38,7 +38,7 @@ var Button = cva.NewCva(
 )
 
 func Example() {
-	fmt.Println(Button.ClassName(Props{"small", "icon"}))
+	fmt.Println(Button.Classes(Props{"small", "icon"}))
 	// Output: inline-flex items-center justify-center h-8 bg-gray-100 rounded-full
 	//   aspect-square [&_svg]:size-4
 }

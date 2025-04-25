@@ -1,0 +1,58 @@
+package templintegration
+
+import (
+	twmerge "github.com/Oudwins/tailwind-merge-go"
+	"github.com/Roundaround/cva-go"
+)
+
+type Size int
+
+const (
+	Small Size = iota
+	Medium
+	Large
+)
+
+const DefaultSize = Medium
+
+type ButtonProps struct {
+	Classes []string // Classes applied after the built-in ones
+	Size    Size     // The variant we want to bind with cva-go
+}
+
+var button = cva.New(
+	cva.Base[ButtonProps]("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"),
+	cva.Variant(
+		func(p ButtonProps) Size { return p.Size },
+		map[Size]string{
+			Small:  "h-9 px-3",
+			Medium: "h-10 px-4 py-2",
+			Large:  "h-11 px-8 py-3",
+		},
+	),
+	cva.Classes(func(p ButtonProps) []string { return p.Classes }),
+)
+
+templ Button(p ButtonProps) {
+	<button class={ twmerge.Merge(button.Classes(p)) }>
+		{ children... }
+	</button>
+}
+
+/*
+You could also store the Classes function reference directly or wrap with
+post-processing like twmerge ahead of time to reduce the amount of code within
+the templ markup:
+
+func button(p ButtonProps) string {
+	return twmerge.Merge(cva.New(
+		// ...
+	).Classes(p))
+}
+
+templ Button(p ButtonProps) {
+	<button class={ button(p) }>
+		{ children... }
+	</button>
+}
+*/
