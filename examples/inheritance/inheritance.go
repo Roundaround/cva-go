@@ -14,7 +14,7 @@ type ButtonProps struct {
 
 var Button = cva.New(
 	cva.Base[ButtonProps]("inline-flex items-center justify-center"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p ButtonProps) string { return p.Size },
 		map[string]string{
 			"small":  "h-8 px-3",
@@ -22,7 +22,7 @@ var Button = cva.New(
 			"large":  "h-12 px-6",
 		},
 	),
-	cva.Variant(
+	cva.MapVariant(
 		func(p ButtonProps) string { return p.Style },
 		map[string]string{
 			"primary":   "bg-blue-500 text-white",
@@ -60,7 +60,7 @@ var IconButton = cva.New(
 		Button,
 		func(p IconButtonProps) ButtonProps { return p.ButtonProps },
 	),
-	cva.Variant(
+	cva.MapVariant(
 		func(p IconButtonProps) string { return p.Icon },
 		map[string]string{
 			"plus":     "rounded-full [&_svg]:size-4",

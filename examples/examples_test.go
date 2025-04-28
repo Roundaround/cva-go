@@ -407,10 +407,10 @@ func TestExamples(t *testing.T) {
 	})
 
 	t.Run("templintegration", func(t *testing.T) {
-		// Note: Because twmerge.Merge is non-deterministic, we'll create a basic
-		// HTML string with the class attribute set directly as the output of
-		// twmerge.Merge to generate the expected outputs at runtime. See the note
-		// below in the twmergejoiner test for more details.
+		// Note: Because twmerge.Merge is non-deterministic, we'll create a basic HTML string with the
+		// class attribute set directly as the output of twmerge.Merge to generate the expected outputs
+		// at runtime. Thankfully due to a caching mechanism in the twmerge package, the output of
+		// twmerge.Merge is deterministic for a given input across a single execution of the test suite.
 
 		base := "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
 		small := "h-9 px-3"

@@ -13,7 +13,7 @@ type Props struct {
 
 var Button = cva.New(
 	cva.Base[Props]("inline-flex items-center justify-center"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-9 px-3",

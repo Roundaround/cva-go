@@ -6,7 +6,46 @@ import (
 )
 
 func TestCva(t *testing.T) {
-	t.Run("Variant", func(t *testing.T) {
+	t.Run("Classes", func(t *testing.T) {
+		type Props struct {
+			CustomClasses []string
+		}
+
+		button := New(
+			Base[Props]("button"),
+			Classes(func(p Props) []string {
+				return p.CustomClasses
+			}),
+		)
+
+		tests := []struct {
+			name  string
+			props Props
+			want  string
+		}{
+			{
+				name:  "with-custom-classes",
+				props: Props{CustomClasses: []string{"custom-1", "custom-2"}},
+				want:  "button custom-1 custom-2",
+			},
+			{
+				name:  "no-custom-classes",
+				props: Props{CustomClasses: nil},
+				want:  "button",
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := button.Classes(test.props)
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("MapVariant", func(t *testing.T) {
 		t.Run("string_value", func(t *testing.T) {
 			type Props struct {
 				Size string
@@ -14,7 +53,7 @@ func TestCva(t *testing.T) {
 
 			button := New(
 				Base[Props]("button"),
-				Variant(
+				MapVariant(
 					func(p Props) string { return p.Size },
 					map[string]string{
 						"small":  "button-small",
@@ -68,7 +107,7 @@ func TestCva(t *testing.T) {
 
 			button := New(
 				Base[Props]("button"),
-				Variant(
+				MapVariant(
 					func(p Props) string { return p.Size },
 					map[string][]string{
 						"small":  {"button-small"},
@@ -120,7 +159,7 @@ func TestCva(t *testing.T) {
 				Size string
 			}
 
-			got := New(Variant(
+			got := New(MapVariant(
 				func(p Props) string { return p.Size },
 				map[string]string{
 					"small":  "small",
@@ -144,7 +183,7 @@ func TestCva(t *testing.T) {
 			}
 
 			t.Run("without_a_mapping_for_zero", func(t *testing.T) {
-				got := New(Variant(
+				got := New(MapVariant(
 					func(p Props) string { return p.Size },
 					map[string]string{
 						"small":  "small",
@@ -159,7 +198,7 @@ func TestCva(t *testing.T) {
 			})
 
 			t.Run("with_a_mapping_for_zero", func(t *testing.T) {
-				got := New(Variant(
+				got := New(MapVariant(
 					func(p Props) string { return p.Size },
 					map[string]string{
 						"small":  "small",
@@ -180,7 +219,7 @@ func TestCva(t *testing.T) {
 				Size string
 			}
 
-			got := New(Variant(
+			got := New(MapVariant(
 				func(p Props) string { return p.Size },
 				map[string]string{},
 			)).Classes(Props{})
@@ -196,7 +235,7 @@ func TestCva(t *testing.T) {
 			}
 
 			var m map[string]string
-			got := New(Variant(
+			got := New(MapVariant(
 				func(p Props) string { return p.Size },
 				m,
 			)).Classes(Props{})
@@ -220,7 +259,7 @@ func TestCva(t *testing.T) {
 
 				button := New(
 					Base[Props]("button"),
-					Variant(
+					MapVariant(
 						func(p Props) string { return p.Size },
 						classesMap,
 					),
@@ -275,7 +314,7 @@ func TestCva(t *testing.T) {
 
 				button := New(
 					Base[Props]("button"),
-					Variant(
+					MapVariant(
 						func(p Props) string { return p.Size },
 						classesMap,
 					),
@@ -470,7 +509,7 @@ func TestCva(t *testing.T) {
 			}
 
 			button := New(
-				Variant(
+				MapVariant(
 					func(p Props) string { return p.Size },
 					map[string]string{
 						"small":  "button-small",
@@ -514,45 +553,6 @@ func TestCva(t *testing.T) {
 		})
 	})
 
-	t.Run("Classes", func(t *testing.T) {
-		type Props struct {
-			CustomClasses []string
-		}
-
-		button := New(
-			Base[Props]("button"),
-			Classes(func(p Props) []string {
-				return p.CustomClasses
-			}),
-		)
-
-		tests := []struct {
-			name  string
-			props Props
-			want  string
-		}{
-			{
-				name:  "with-custom-classes",
-				props: Props{CustomClasses: []string{"custom-1", "custom-2"}},
-				want:  "button custom-1 custom-2",
-			},
-			{
-				name:  "no-custom-classes",
-				props: Props{CustomClasses: nil},
-				want:  "button",
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := button.Classes(test.props)
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
 	t.Run("Inherit", func(t *testing.T) {
 		type BaseProps struct {
 			Size string
@@ -567,7 +567,7 @@ func TestCva(t *testing.T) {
 
 		base := New(
 			Base[BaseProps]("button"),
-			Variant(
+			MapVariant(
 				func(p BaseProps) string { return p.Size },
 				map[string]string{
 					"small":  "button-small",
@@ -582,7 +582,7 @@ func TestCva(t *testing.T) {
 				base,
 				func(p ExtendedProps) BaseProps { return BaseProps{Size: sizes[p.Size]} },
 			),
-			Variant(
+			MapVariant(
 				func(p ExtendedProps) string { return p.Color },
 				map[string]string{
 					"red":   "button-red",
@@ -633,12 +633,12 @@ func TestCva(t *testing.T) {
 
 		button := New(
 			Base[Props]("base"),
-			Variant(func(p Props) string { return p.Size }, map[string]string{
+			MapVariant(func(p Props) string { return p.Size }, map[string]string{
 				"small":  "small",
 				"medium": "medium",
 				"large":  "large",
 			}),
-			Variant(func(p Props) string { return p.Color }, map[string]string{
+			MapVariant(func(p Props) string { return p.Color }, map[string]string{
 				"red":   "red",
 				"blue":  "blue",
 				"green": "green",
@@ -771,7 +771,7 @@ func TestCva(t *testing.T) {
 
 		button := New(
 			Base[Props]("button"),
-			Variant(
+			MapVariant(
 				func(p Props) string { return p.Size },
 				map[string]string{"small": "button", "medium": "button"},
 			),
@@ -791,7 +791,7 @@ func TestCva(t *testing.T) {
 
 		button := New(
 			Base[Props](" start "),
-			Variant(
+			MapVariant(
 				func(p Props) int { return p.i },
 				map[int]string{
 					0: "",           // Empty produces an extra "joining" space
@@ -815,204 +815,4 @@ func TestCva(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestMemoize(t *testing.T) {
-	t.Run("scalar", func(t *testing.T) {
-		callCount := 0
-		expensiveFn := func(x int) int {
-			callCount++
-			return x * 2
-		}
-
-		memoizedFn := Memoize(expensiveFn)
-
-		// First call should compute the result
-		if got := memoizedFn(5); got != 10 {
-			t.Errorf("got %d, want %d", got, 10)
-		}
-		if callCount != 1 {
-			t.Errorf("callCount = %d, want %d", callCount, 1)
-		}
-
-		// Second call with same input should use cached result
-		if got := memoizedFn(5); got != 10 {
-			t.Errorf("got %d, want %d", got, 10)
-		}
-		if callCount != 1 {
-			t.Errorf("callCount = %d, want %d", callCount, 1)
-		}
-
-		// Call with different input should compute new result
-		if got := memoizedFn(6); got != 12 {
-			t.Errorf("got %d, want %d", got, 12)
-		}
-		if callCount != 2 {
-			t.Errorf("callCount = %d, want %d", callCount, 2)
-		}
-	})
-
-	t.Run("struct", func(t *testing.T) {
-		type TestStruct struct {
-			A int
-			B string
-		}
-
-		callCount := 0
-		expensiveFn := func(s TestStruct) string {
-			callCount++
-			return s.B + "-" + strconv.Itoa(s.A)
-		}
-
-		memoizedFn := Memoize(expensiveFn)
-
-		// First call should compute the result
-		input1 := TestStruct{A: 1, B: "test"}
-		if got := memoizedFn(input1); got != "test-1" {
-			t.Errorf("got %s, want %s", got, "test-1")
-		}
-		if callCount != 1 {
-			t.Errorf("callCount = %d, want %d", callCount, 1)
-		}
-
-		// Second call with same input should use cached result
-		if got := memoizedFn(input1); got != "test-1" {
-			t.Errorf("got %s, want %s", got, "test-1")
-		}
-		if callCount != 1 {
-			t.Errorf("callCount = %d, want %d", callCount, 1)
-		}
-
-		// Call with different input should compute new result
-		input2 := TestStruct{A: 2, B: "test"}
-		if got := memoizedFn(input2); got != "test-2" {
-			t.Errorf("got %s, want %s", got, "test-2")
-		}
-		if callCount != 2 {
-			t.Errorf("callCount = %d, want %d", callCount, 2)
-		}
-	})
-
-	t.Run("map", func(t *testing.T) {
-		type TestKey struct {
-			X int
-			Y int
-		}
-
-		callCount := 0
-		expensiveFn := func(k TestKey) int {
-			callCount++
-			return k.X + k.Y
-		}
-
-		memoizedFn := Memoize(expensiveFn)
-
-		// First call should compute the result
-		input1 := TestKey{X: 1, Y: 2}
-		if got := memoizedFn(input1); got != 3 {
-			t.Errorf("got %d, want %d", got, 3)
-		}
-		if callCount != 1 {
-			t.Errorf("callCount = %d, want %d", callCount, 1)
-		}
-
-		// Second call with same input should use cached result
-		if got := memoizedFn(input1); got != 3 {
-			t.Errorf("got %d, want %d", got, 3)
-		}
-		if callCount != 1 {
-			t.Errorf("callCount = %d, want %d", callCount, 1)
-		}
-
-		// Call with different input should compute new result
-		input2 := TestKey{X: 3, Y: 4}
-		if got := memoizedFn(input2); got != 7 {
-			t.Errorf("got %d, want %d", got, 7)
-		}
-		if callCount != 2 {
-			t.Errorf("callCount = %d, want %d", callCount, 2)
-		}
-	})
-}
-
-func TestDedupeClasses(t *testing.T) {
-	tests := []struct {
-		name    string
-		classes []string
-		want    string
-	}{
-		{
-			name:    "empty",
-			classes: []string{},
-			want:    "",
-		},
-		{
-			name:    "single_part",
-			classes: []string{"button"},
-			want:    "button",
-		},
-		{
-			name:    "multiple_parts_no_duplicates",
-			classes: []string{"button", "primary", "large"},
-			want:    "button primary large",
-		},
-		{
-			name:    "parts_with_duplicates",
-			classes: []string{"button", "primary", "button", "large"},
-			want:    "button primary large",
-		},
-		{
-			name:    "parts_with_spaces_and_duplicates",
-			classes: []string{"button primary", "large", "button", "primary large"},
-			want:    "button primary large",
-		},
-		{
-			name:    "parts_with_multiple_duplicates",
-			classes: []string{"button", "primary", "button", "large", "primary", "button"},
-			want:    "button primary large",
-		},
-		{
-			name:    "parts_with_empty_strings",
-			classes: []string{"button", "", "primary", " ", "large"},
-			want:    "button primary large",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			got := DedupeClasses(test.classes...)
-			if got != test.want {
-				t.Errorf("DedupeClasses(%v) = %q, want %q", test.classes, got, test.want)
-			}
-		})
-	}
-}
-
-func TestJoinClasses(t *testing.T) {
-	tests := []struct {
-		classes []string
-		want    string
-	}{
-		{
-			classes: []string{},
-			want:    "",
-		},
-		{
-			classes: []string{"    simple       "},
-			want:    "simple",
-		},
-		{
-			classes: []string{" start tab	 space  end\n"},
-			want:    "start tab space end",
-		},
-	}
-
-	for i, test := range tests {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			got := joinClasses(test.classes...)
-			if got != test.want {
-				t.Errorf("joinClasses(%v) = %q, want %q", test.classes, got, test.want)
-			}
-		})
-	}
 }

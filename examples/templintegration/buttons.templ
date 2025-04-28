@@ -22,7 +22,7 @@ type ButtonProps struct {
 
 var button = cva.New(
 	cva.Base[ButtonProps]("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p ButtonProps) Size { return p.Size },
 		map[Size]string{
 			Small:  "h-9 px-3",
