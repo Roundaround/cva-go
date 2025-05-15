@@ -7,42 +7,83 @@ import (
 
 func TestCva(t *testing.T) {
 	t.Run("Classes", func(t *testing.T) {
-		type Props struct {
-			CustomClasses []string
-		}
+		t.Run("string_value", func(t *testing.T) {
+			type Props struct {
+				CustomClasses string
+			}
 
-		button := New(
-			Base[Props]("button"),
-			Classes(func(p Props) []string {
-				return p.CustomClasses
-			}),
-		)
+			button := New(
+				Base[Props]("button"),
+				Classes(func(p Props) string {
+					return p.CustomClasses
+				}),
+			)
 
-		tests := []struct {
-			name  string
-			props Props
-			want  string
-		}{
-			{
-				name:  "with-custom-classes",
-				props: Props{CustomClasses: []string{"custom-1", "custom-2"}},
-				want:  "button custom-1 custom-2",
-			},
-			{
-				name:  "no-custom-classes",
-				props: Props{CustomClasses: nil},
-				want:  "button",
-			},
-		}
+			tests := []struct {
+				name  string
+				props Props
+				want  string
+			}{
+				{
+					name:  "with-custom-classes",
+					props: Props{CustomClasses: "custom-1 custom-2"},
+					want:  "button custom-1 custom-2",
+				},
+				{
+					name:  "no-custom-classes",
+					props: Props{CustomClasses: ""},
+					want:  "button",
+				},
+			}
 
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := button.Classes(test.props)
-				if got != test.want {
-					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := button.Classes(test.props)
+					if got != test.want {
+						t.Errorf("got %s, want %s", got, test.want)
+					}
+				})
+			}
+		})
+
+		t.Run("slice_value", func(t *testing.T) {
+			type Props struct {
+				CustomClasses []string
+			}
+
+			button := New(
+				Base[Props]("button"),
+				Classes(func(p Props) []string {
+					return p.CustomClasses
+				}),
+			)
+
+			tests := []struct {
+				name  string
+				props Props
+				want  string
+			}{
+				{
+					name:  "with-custom-classes",
+					props: Props{CustomClasses: []string{"custom-1", "custom-2"}},
+					want:  "button custom-1 custom-2",
+				},
+				{
+					name:  "no-custom-classes",
+					props: Props{CustomClasses: nil},
+					want:  "button",
+				},
+			}
+
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					got := button.Classes(test.props)
+					if got != test.want {
+						t.Errorf("got %s, want %s", got, test.want)
+					}
+				})
+			}
+		})
 	})
 
 	t.Run("MapVariant", func(t *testing.T) {
