@@ -33,24 +33,79 @@ type Props struct {
 
 button := cva.New(
 	cva.Base[Props]("inline-flex items-center justify-center"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.Size },
-		map[string][]string{
-			"small":  {"h-9 px-3"},
-			"medium": {"h-10 px-4 py-2"},
-			"large":  {"h-11 px-8 py-3"},
+		map[string]string{
+			"small":  "h-9 px-3",
+			"medium": "h-10 px-4 py-2 rounded-md",
+			"large":  "h-11 px-8 py-3 rounded-md",
 		},
 	),
 )
 
-fmt.Println(button.Classes(Props{"small"}))
-// Output: inline-flex items-center justify-center h-9 px-3
+fmt.Println(button.Classes(Props{"medium"}))
+// Output: inline-flex items-center justify-center h-10 px-4 py-2 rounded-md
+```
+
+### Explicitly defined variants
+
+If you prefer, you can define your variants up front so they can be used in multiple options:
+
+```go
+type Props struct {
+	Size  string
+}
+
+size := cva.NewVariant(func(p Props) string { return p.Size })
+
+button := cva.New(
+	cva.Base[Props]("inline-flex items-center justify-center"),
+	size.Map(map[string]string{
+		"small":  "h-9 px-3",
+		"medium": "h-10 px-4 py-2",
+		"large":  "h-11 px-8 py-3",
+	}),
+	size.IsNot("small").Then("rounded-md"),
+)
+
+fmt.Println(button.Classes(Props{"medium"}))
+// Output: inline-flex items-center justify-center h-10 px-4 py-2 rounded-md
+```
+
+If your data is not fully sanitized, you can also take advantage of the `WithValues` and
+`WithDefault` methods. Using `WithValues` simply maps any value to the zero value of the variant's
+type when it doesn't explicitly match one of the supplied values, and `WithDefault` maps the zero
+value to the specified value.
+
+```go
+type Props struct {
+	Size  string
+}
+
+size := cva.NewVariant(func(p Props) string { return p.Size }).
+	WithValues("small", "medium", "large").
+	WithDefault("medium")
+
+button := cva.New(
+	cva.Base[Props]("inline-flex items-center justify-center"),
+	size.Map(map[string]string{
+		"small":  "h-9 px-3",
+		"medium": "h-10 px-4 py-2",
+		"large":  "h-11 px-8 py-3",
+	}),
+	size.IsNot("small").Then("rounded-md"),
+)
+
+fmt.Println(button.Classes(Props{"custom"}))
+// Invalid value, so this is converted to "", then to the default ("medium")
+// Output: inline-flex items-center justify-center h-10 px-4 py-2 rounded-md
 ```
 
 ### Compound variants
 
-The `CompoundVariant` helper allows you to apply classes based on a pair of values. For more than
-two values, check out [predicate variants](#predicate-variants)
+The `CompoundVariant` helper allows you to apply classes based on a pair of values. When defining
+your compound values, the `NewCompound` helper will provide strong typing for its params.
+For more than two values, check out [predicate variants](#predicate-variants).
 
 ```go
 type Props struct {
@@ -60,7 +115,7 @@ type Props struct {
 
 button := cva.New(
 	cva.Base[Props]("inline-flex items-center justify-center"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-8",
@@ -68,7 +123,7 @@ button := cva.New(
 			"large":  "h-12",
 		},
 	),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.Style },
 		map[string]string{
 			"icon":    "bg-gray-100 rounded-full aspect-square",
@@ -91,9 +146,9 @@ fmt.Println(button.Classes(Props{"small", "icon"}))
 
 ### Predicate variants
 
-The `PredicateVariant` helper lets you specify a predicate function for each class list you want to
-apply. When working with non-string-map values (i.e. bools) or more than two variant properties,
-predicate variants can give you more advanced control over when classes are applied.
+The `PredicateVariant` helper lets you specify a predicate function for each class list you want
+to apply. When working with non-string-map values (i.e. bools) or more than two variant
+properties, predicate variants can give you more advanced control over when classes are applied.
 
 ```go
 type Props struct {
@@ -129,7 +184,7 @@ step, should you need it.
 ```go
 button := cva.New(
 	cva.Base[Props]("inline-flex items-center justify-center rounded-md"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.Size },
 		map[string]string{
 			"small":  "h-8 rounded-md", // rounded-md is repeated from the base
@@ -153,12 +208,12 @@ import twmerge "github.com/Oudwins/tailwind-merge-go"
 
 button := cva.New(
 	cva.Base[Props]("inline-flex items-center justify-center px-2 py-1"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.size },
-		map[string][]string{
-			"small":  {"h-9 px-3"},
-			"medium": {"h-10 px-4 py-2"},
-			"large":  {"h-11 px-8 py-3"},
+		map[string]string{
+			"small":  "h-9 px-3",
+			"medium": "h-10 px-4 py-2",
+			"large":  "h-11 px-8 py-3",
 		},
 	),
 )
@@ -176,12 +231,12 @@ reference to the `Classes` function rather than the component struct itself.
 ```go
 button := cva.New(
 	cva.Base[Props]("inline-flex items-center justify-center"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p Props) string { return p.size },
-		map[string][]string{
-			"small":  {"h-9 px-3"},
-			"medium": {"h-10 px-4 py-2"},
-			"large":  {"h-11 px-8 py-3"},
+		map[string]string{
+			"small":  "h-9 px-3",
+			"medium": "h-10 px-4 py-2",
+			"large":  "h-11 px-8 py-3",
 		},
 	),
 ).Classes // Storing a reference to the Classes func
@@ -190,10 +245,104 @@ fmt.Println(button(Props{"medium"}))
 // Output: inline-flex items-center justify-center h-10 px-4 py-2
 ```
 
+Or going one step further, if you're using the `DedupeClasses`, `twmerge.Merge`, or some other
+post-processing function, you can wrap it all together all at once:
+
+```go
+buttonCva := cva.New(
+	cva.Base[Props]("inline-flex items-center justify-center rounded-md"),
+	cva.MapVariant(
+		func(p Props) string { return p.size },
+		map[string]string{
+			"small":  "h-9 px-3 rounded-md",
+			"medium": "h-10 px-4 py-2 rounded-md",
+			"large":  "h-11 px-8 py-3 rounded-md",
+		},
+	),
+)
+
+button := func(p Props) {
+	return cva.DedupeClasses(buttonCva.Classes(p))
+}
+
+fmt.Println(button(Props{"medium"}))
+// Output: inline-flex items-center justify-center rounded-md h-10 px-4 py-2
+```
+
+### Complex variant definitions
+
+Sometimes simple maps are not quite enough, and you might find yourself needing more complex
+matching logic for your classes. To help facilitate this, cva-go ships with a `Matcher` struct
+that can be used to build out details boolean expressions.
+
+```go
+type Size int
+type Theme int
+type Element int
+
+const (
+	SizeSmall Size = iota
+	SizeLarge
+)
+
+const (
+	ThemeDanger Theme = iota
+	ThemePrimary
+)
+
+const (
+	ElementButton Element = iota
+	ElementLink
+	ElementIcon
+)
+
+type Props struct {
+	Size    Size
+	Theme   Theme
+	Element Element
+}
+
+size := cva.NewVariant(func(p Props) Size { return p.Size })
+theme := cva.NewVariant(func(p Props) Theme { return p.Theme })
+elem := cva.NewVariant(func(p Props) Element { return p.Element })
+
+button := cva.New(
+	// Apply classes no matter what
+	cva.Base[Props]("px-4 py-1"),
+
+	// Apply classes based on 1:1 mappings to variant values
+	size.Map(map[Size]string{
+		SizeSmall: "px-2",
+		SizeLarge: "px-6 py-2",
+	}),
+	theme.Map(map[Theme]string{
+		ThemeDanger:  "bg-red-500 text-white",
+		ThemePrimary: "bg-blue-500 text-white",
+	}),
+
+	// Construct matchers using Variant.* (Is, In, IsNot, NotIn, or Test)
+	elem.Is(ElementIcon).Then("rounded-full"),
+	elem.IsNot(ElementIcon).Then("rounded-md"),
+	// elem.In(ElementButton, ElementLink).Then("rounded-md"),
+
+	// Compose complex matchers using Matcher.* (Or, And, Not)
+	size.Is(SizeLarge).And(theme.Is(ThemeDanger)).Then("font-bold"),
+	elem.Is(ElementIcon).And(size.IsNot(SizeSmall)).Then("[&_svg]:size-5"),
+
+	// Use Any, All, and When if method chaining is not your cup of tea
+	cva.When(elem.Is(ElementLink), "text-blue-500 hover:text-blue-600 bg-transparent"),
+)
+
+fmt.Println(button.Classes(Props{SizeLarge, ThemeDanger, ElementLink}))
+
+// Of course, you might also want to use tailwind-merge-go for these more complex cases:
+fmt.Println(twmerge.Merge(button.Classes(Props{SizeLarge, ThemeDanger, ElementLink})))
+```
+
 ### Composition through inheritance
 
-You can compose components through inheritance by using the `Inherit` option. This will copy all the
-class lists and variants from the base Cva, allowing you to build upon it.
+You can compose components through inheritance by using the `Inherit` option. This will copy all
+the class lists and variants from the base Cva, allowing you to build upon it.
 
 ```go
 type ButtonProps struct {
@@ -203,7 +352,7 @@ type ButtonProps struct {
 
 button := cva.New(
 	cva.Base[ButtonProps]("inline-flex items-center justify-center"),
-	cva.Variant(
+	cva.MapVariant(
 		func(p ButtonProps) string { return p.Size },
 		map[string]string{
 			"small":  "h-8 px-3",
@@ -211,7 +360,7 @@ button := cva.New(
 			"large":  "h-12 px-6",
 		},
 	),
-	cva.Variant(
+	cva.MapVariant(
 		func(p ButtonProps) string { return p.Style },
 		map[string]string{
 			"primary":   "bg-blue-500 text-white",
@@ -265,7 +414,7 @@ type ExtendedProps struct {
 
 base := cva.New[Props](
 	cva.Base[Props]("button"),
-	cva.Variant(
+	cva.MapVariant(
 		cva.Memoize(func(p Props) string {
 			// Call to some expensive transformation function
 			return sizeString(p.Size)
@@ -288,7 +437,7 @@ extended := cva.New[ExtendedProps](
 			}
 		}),
 	),
-	cva.Variant(
+	cva.MapVariant(
 		func(p ExtendedProps) string { return p.Size },
 		map[string]string{
 			"xs":  "button-small",

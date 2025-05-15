@@ -12,10 +12,11 @@ import (
 	"github.com/Roundaround/cva-go/examples/compoundvariants"
 	"github.com/Roundaround/cva-go/examples/deduping"
 	"github.com/Roundaround/cva-go/examples/inheritance"
+	"github.com/Roundaround/cva-go/examples/matchers"
 	"github.com/Roundaround/cva-go/examples/predicatevariants"
 	"github.com/Roundaround/cva-go/examples/simplecase"
+	"github.com/Roundaround/cva-go/examples/simplevariant"
 	"github.com/Roundaround/cva-go/examples/templintegration"
-	"github.com/Roundaround/cva-go/examples/variantapi"
 )
 
 func TestExamples(t *testing.T) {
@@ -326,6 +327,115 @@ func TestExamples(t *testing.T) {
 		})
 	})
 
+	t.Run("matchers", func(t *testing.T) {
+		// Note: Because twmerge.Merge is non-deterministic, we'll create a basic HTML string with the
+		// class attribute set directly as the output of twmerge.Merge to generate the expected outputs
+		// at runtime. Thankfully due to a caching mechanism in the twmerge package, the output of
+		// twmerge.Merge is deterministic for a given input across a single execution of the test suite.
+
+		tests := []struct {
+			name  string
+			size  matchers.Size
+			theme matchers.Theme
+			elem  matchers.Element
+			want  string
+		}{
+			{
+				name:  "small+danger+button",
+				size:  matchers.SizeSmall,
+				theme: matchers.ThemeDanger,
+				elem:  matchers.ElementButton,
+				want:  twmerge.Merge("px-4 py-1 px-2 bg-red-500 text-white rounded-md"),
+			},
+			{
+				name:  "small+danger+link",
+				size:  matchers.SizeSmall,
+				theme: matchers.ThemeDanger,
+				elem:  matchers.ElementLink,
+				want:  twmerge.Merge("px-4 py-1 px-2 bg-red-500 text-white rounded-md text-blue-500 hover:text-blue-600 bg-transparent"),
+			},
+			{
+				name:  "small+danger+icon",
+				size:  matchers.SizeSmall,
+				theme: matchers.ThemeDanger,
+				elem:  matchers.ElementIcon,
+				want:  twmerge.Merge("px-4 py-1 px-2 bg-red-500 text-white rounded-full"),
+			},
+			{
+				name:  "small+primary+button",
+				size:  matchers.SizeSmall,
+				theme: matchers.ThemePrimary,
+				elem:  matchers.ElementButton,
+				want:  twmerge.Merge("px-4 py-1 px-2 bg-blue-500 text-white rounded-md"),
+			},
+			{
+				name:  "small+primary+link",
+				size:  matchers.SizeSmall,
+				theme: matchers.ThemePrimary,
+				elem:  matchers.ElementLink,
+				want:  twmerge.Merge("px-4 py-1 px-2 bg-blue-500 text-white rounded-md text-blue-500 hover:text-blue-600 bg-transparent"),
+			},
+			{
+				name:  "small+primary+icon",
+				size:  matchers.SizeSmall,
+				theme: matchers.ThemePrimary,
+				elem:  matchers.ElementIcon,
+				want:  twmerge.Merge("px-4 py-1 px-2 bg-blue-500 text-white rounded-full"),
+			},
+			{
+				name:  "large+danger+button",
+				size:  matchers.SizeLarge,
+				theme: matchers.ThemeDanger,
+				elem:  matchers.ElementButton,
+				want:  twmerge.Merge("px-4 py-1 px-6 py-2 bg-red-500 text-white rounded-md font-bold"),
+			},
+			{
+				name:  "large+danger+link",
+				size:  matchers.SizeLarge,
+				theme: matchers.ThemeDanger,
+				elem:  matchers.ElementLink,
+				want:  twmerge.Merge("px-4 py-1 px-6 py-2 bg-red-500 text-white rounded-md font-bold text-blue-500 hover:text-blue-600 bg-transparent"),
+			},
+			{
+				name:  "large+danger+icon",
+				size:  matchers.SizeLarge,
+				theme: matchers.ThemeDanger,
+				elem:  matchers.ElementIcon,
+				want:  twmerge.Merge("px-4 py-1 px-6 py-2 bg-red-500 text-white rounded-full font-bold [&_svg]:size-5"),
+			},
+			{
+				name:  "large+primary+button",
+				size:  matchers.SizeLarge,
+				theme: matchers.ThemePrimary,
+				elem:  matchers.ElementButton,
+				want:  twmerge.Merge("px-4 py-1 px-6 py-2 bg-blue-500 text-white rounded-md"),
+			},
+			{
+				name:  "large+primary+link",
+				size:  matchers.SizeLarge,
+				theme: matchers.ThemePrimary,
+				elem:  matchers.ElementLink,
+				want:  twmerge.Merge("px-4 py-1 px-6 py-2 bg-blue-500 text-white rounded-md text-blue-500 hover:text-blue-600 bg-transparent"),
+			},
+			{
+				name:  "large+primary+icon",
+				size:  matchers.SizeLarge,
+				theme: matchers.ThemePrimary,
+				elem:  matchers.ElementIcon,
+				want:  twmerge.Merge("px-4 py-1 px-6 py-2 bg-blue-500 text-white rounded-full [&_svg]:size-5"),
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := twmerge.Merge(matchers.Button.Classes(matchers.Props{Size: test.size, Theme: test.theme, Element: test.elem}))
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
 	t.Run("predicatevariants", func(t *testing.T) {
 		tests := []struct {
 			name     string
@@ -372,8 +482,8 @@ func TestExamples(t *testing.T) {
 	t.Run("simplecase", func(t *testing.T) {
 		base := "inline-flex items-center justify-center"
 		small := "h-9 px-3"
-		medium := "h-10 px-4 py-2"
-		large := "h-11 px-8 py-3"
+		medium := "h-10 px-4 py-2 rounded-md"
+		large := "h-11 px-8 py-3 rounded-md"
 
 		tests := []struct {
 			name string
@@ -400,6 +510,44 @@ func TestExamples(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
 				got := simplecase.Button.Classes(simplecase.Props{Size: test.size})
+				if got != test.want {
+					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("simplevariant", func(t *testing.T) {
+		base := "inline-flex items-center justify-center"
+		small := "h-9 px-3"
+		medium := "h-10 px-4 py-2 rounded-md"
+		large := "h-11 px-8 py-3 rounded-md"
+
+		tests := []struct {
+			name string
+			size string
+			want string
+		}{
+			{
+				name: "small",
+				size: "small",
+				want: base + " " + small,
+			},
+			{
+				name: "medium",
+				size: "medium",
+				want: base + " " + medium,
+			},
+			{
+				name: "large",
+				size: "large",
+				want: base + " " + large,
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := simplevariant.Button.Classes(simplevariant.Props{Size: test.size})
 				if got != test.want {
 					t.Errorf("got %s, want %s", got, test.want)
 				}
@@ -478,43 +626,6 @@ func TestExamples(t *testing.T) {
 				got := buf.String()
 				if got != test.want {
 					t.Errorf("got %s, want %s", got, test.want)
-				}
-			})
-		}
-	})
-
-	t.Run("variantapi", func(t *testing.T) {
-		tests := []struct {
-			name  string
-			props variantapi.ButtonProps
-			want  string
-		}{
-			{
-				name:  "basic-medium",
-				props: variantapi.ButtonProps{Size: "medium"},
-				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base bg-green-500 text-white",
-			},
-			{
-				name:  "loading",
-				props: variantapi.ButtonProps{Size: "medium", IsLoading: true},
-				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base opacity-50 cursor-not-allowed bg-green-500 text-white",
-			},
-			{
-				name:  "count-2",
-				props: variantapi.ButtonProps{Size: "medium", Count: 2},
-				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base relative font-bold bg-green-500 text-white",
-			},
-			{
-				name:  "status-error",
-				props: variantapi.ButtonProps{Size: "medium", Status: variantapi.StatusError},
-				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base bg-red-500 text-white",
-			},
-		}
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				got := variantapi.Button.Classes(test.props)
-				if got != test.want {
-					t.Errorf("got %q, want %q", got, test.want)
 				}
 			})
 		}
