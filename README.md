@@ -1,5 +1,10 @@
 # cva-go
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/Roundaround/cva-go.svg)](https://pkg.go.dev/github.com/Roundaround/cva-go)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Roundaround/cva-go)](https://goreportcard.com/report/github.com/Roundaround/cva-go)
+[![Coverage Status](https://coveralls.io/repos/github/Roundaround/cva-go/badge.svg?branch=main)](https://coveralls.io/github/Roundaround/cva-go?branch=main)
+
 <strong>C</strong>lass <strong>V</strong>ariance <strong>A</strong>uthority
 
 _(but for Go!)_
