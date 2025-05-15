@@ -15,6 +15,7 @@ import (
 	"github.com/Roundaround/cva-go/examples/predicatevariants"
 	"github.com/Roundaround/cva-go/examples/simplecase"
 	"github.com/Roundaround/cva-go/examples/templintegration"
+	"github.com/Roundaround/cva-go/examples/variantapi"
 )
 
 func TestExamples(t *testing.T) {
@@ -477,6 +478,43 @@ func TestExamples(t *testing.T) {
 				got := buf.String()
 				if got != test.want {
 					t.Errorf("got %s, want %s", got, test.want)
+				}
+			})
+		}
+	})
+
+	t.Run("variantapi", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			props variantapi.ButtonProps
+			want  string
+		}{
+			{
+				name:  "basic-medium",
+				props: variantapi.ButtonProps{Size: "medium"},
+				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base bg-green-500 text-white",
+			},
+			{
+				name:  "loading",
+				props: variantapi.ButtonProps{Size: "medium", IsLoading: true},
+				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base opacity-50 cursor-not-allowed bg-green-500 text-white",
+			},
+			{
+				name:  "count-2",
+				props: variantapi.ButtonProps{Size: "medium", Count: 2},
+				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base relative font-bold bg-green-500 text-white",
+			},
+			{
+				name:  "status-error",
+				props: variantapi.ButtonProps{Size: "medium", Status: variantapi.StatusError},
+				want:  "inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2 text-base bg-red-500 text-white",
+			},
+		}
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				got := variantapi.Button.Classes(test.props)
+				if got != test.want {
+					t.Errorf("got %q, want %q", got, test.want)
 				}
 			})
 		}
